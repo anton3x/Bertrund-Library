@@ -1,67 +1,128 @@
 # 📚 Bertrund
 
-## Descrição do Projeto
+## Project Description
 
-A **Bertrund** é um sistema de biblioteca online hospedado no Azure e desenvolvido com **ASP.NET MVC** e **Bootstrap**. O projeto oferece funcionalidades avançadas para gerir livros e utilizadores, contando com níveis de acesso específicos para leitores, bibliotecários e administradores. Além disso, ele possui recursos modernos como autenticação pelo Google, chatbot inteligente e suporte a temas claro e escuro.
-
-- **Website Online**: [definitivolabweb.azurewebsites.net](https://definitivolabweb.azurewebsites.net)
+**Bertrund** is an online library system developed with **ASP.NET MVC**, **Bootstrap**, **SignalR**, **SQL Server**, and hosted on **Azure App Service**. The project offers advanced features for managing books and users, with specific access levels for readers, librarians, and administrators. Additionally, it includes modern features like **Google authentication**, an intelligent chatbot powered by **Google Gemini**, **Cloudflare Turnstile** for bot protection, and support for light and dark themes.
 
 ---
 
-## 🎯 Funcionalidades Principais
+## 🎯 Key Features
 
-### **Utilizadores**
-#### Leitores:
-- Solicitação de empréstimos de livros por **15 dias**.
-- Histórico de empréstimos, devoluções e reservas.
+### **Users**
+#### Readers:
+- Request book loans for **15 days**.
+- View history of loans, returns, and reservations.
 
-#### Bibliotecários:
-- Gestão do catálogo de Livros
-- Gestão do catálogo de Autores
-- Gestão do catálogo de Categorias
-- Gestão do catálogo de Empréstimos
+#### Librarians:
+- Manage the book catalog.
+- Manage the author catalog.
+- Manage the category catalog.
+- Manage the loan catalog.
 
-#### Administradores:
-- Controlo e gestão dos utilizadores.
-
----
-
-## 🌍 Experiência do Utilizador
-
-- **Tradução em Diversos Idiomas**: Suporte para vários idiomas.
-- **Modo Escuro/Claro**: Alternância de modo para conforto visual.
+#### Administrators:
+- Control and manage users.
 
 ---
 
-## 🔐 Recursos de Segurança
+## 🌍 User Experience
 
-- **CAPTCHA Cloudflare Turnstile**: Proteção contra bots.
-- **Autenticação pelo Google**: Login seguro usando OAuth 2.0.
-- **Chatbot Inteligente**: API Google Gemini para suporte ao utilizador.
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-- **ASP.NET MVC**: Backend robusto para gestão dinâmica.
-- **Bootstrap 5**: Design responsivo e moderno.
-- **SQL Server no Azure**: Banco de dados confiável e escalável.
-- **Cloudflare Turnstile**: CAPTCHA seguro e de fácil integração.
-- **Google OAuth**: Autenticação confiável.
-- **Azure App Service**: Hospedagem escalável e eficiente.
-- **Google Gemini**: Plataforma de AI
-- **SignalR**: Comunicação em tempo real para aplicações interativas.
-- **Daily.co**: Plataforma de integração para chamadas de vídeo e voz
+- **Multilingual Support**: Interface available in multiple languages.
+- **Light/Dark Mode**: Theme switching for visual comfort.
 
 ---
 
-## 🤝 Projeto realizado por:
+## 🔐 Security Features
 
-- **António Fernandes** – 78207  
-- **Francisco Guerra** – 78818  
-- **José Brás** – 78238  
-- **João Sousa** – 77225
+- **CAPTCHA Cloudflare Turnstile**: Protection against bots.
+- **Google Authentication**: Secure login using OAuth 2.0.
+- **Intelligent Chatbot**: User support via Google Gemini API.
 
+---
 
+## 🛠️ Technologies Used
 
+- **ASP.NET MVC**: Robust backend for dynamic management.
+- **Bootstrap 5**: Modern and responsive design.
+- **SQL Server on Azure**: Reliable and scalable database.
+- **Cloudflare Turnstile**: Secure and seamless CAPTCHA integration.
+- **Google OAuth**: Trusted authentication.
+- **Azure App Service**: Scalable and efficient hosting.
+- **Google Gemini**: AI platform.
+- **SignalR**: Real-time communication for interactive applications.
+- **Daily.co**: Integration platform for video and voice calls.
 
+---
+
+1. **Clone the Repository**
+
+   Clone the repository to your local machine:
+   ```bash
+   git clone https://github.com/anton3x/bertrund.git
+   ```
+   
+2. **Configure the Application**
+   
+   Update the appsettings.json file with your configurations:
+   ```bash
+   {
+      "ConnectionStrings": {
+        "DefaultConnection": "your-default-db-connection"
+      },
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      },
+      "AllowedHosts": "*",
+      "EmprestimoCleanup": {
+        "DiasParaExclusao": 3,
+        "IntervaloVerificacaoHoras": 1
+      },
+      "EmailConfiguration": {
+        "FromEmail": "noreply@example.com",
+        "DisplayName": "System Notifications",
+        "SmtpServer": "smtp.gmail.com",
+        "Port": 587,
+        "Username": "your-email@example.com",
+        "Password": "your-email-password"
+      },
+      "Auth": {
+        "Google": {
+          "ClientId": "your-google-client-id",
+          "ClientSecret": "your-google-client-secret"
+        }
+      },
+      "Turnstile": {
+        "SiteKey": "your-turnstile-site-key",
+        "SecretKey": "your-turnstile-secret-key"
+      },
+      "Gemini": {
+        "ApiKey": "your-gemini-api-key",
+        "Model": "tunedModels/copy-of-copy-of-prompt-tunning-a6dexfock"
+      },
+      "DailyCo": {
+        "ApiKey": "your-dailyco-api-key",
+        "DailyApiBaseUrl": "https://api.daily.co/v1/"
+      }
+    }
+
+   ```
+    
+3. **Set Up the Development Environment**
+
+   Ensure you have installed:
+   + .NET 8.0 SDK or later
+   + SQL Server
+    
+4. **Set Up the Database**
+    ```bash
+      update-database
+    ```
+5. **Run the Application**
+6. **Access the Application**
+
+   Open your browser and navigate to:
+   ```bash
+    https://localhost:5001
+   ```
