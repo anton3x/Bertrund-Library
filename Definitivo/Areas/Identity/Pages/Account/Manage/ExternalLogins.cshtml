@@ -1,0 +1,80 @@
+﻿@page
+@model ExternalLoginsModel
+@{
+    ViewData["Title"] = "Gerir as suas contas externas";
+    ViewData["ActivePage"] = ManageNavPages.ExternalLogins;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="container mt-4 mb-2">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <div class="mb-4">
+                <h5 class="mb-1">Contas Associadas</h5>
+                <p class="text-muted small">Faça a gestão das suas contas externas associadas</p>
+            </div>
+
+            @if (Model.CurrentLogins?.Count > 0)
+            {
+                @foreach (var login in Model.CurrentLogins)
+                {
+                    <div class="d-flex align-items-center justify-content-between p-3 border rounded mb-3">
+                        <div class="d-flex align-items-center">
+                            @if (login.LoginProvider.ToLower() == "google")
+                            {
+                                <img src="/images/google-icon.png" alt="Google" class="me-3" style="width: 24px; height: 24px;">
+                            }
+                            <div>
+                                <div class="fw-bold">@login.ProviderDisplayName</div>
+                                <div class="text-muted small">Sessão iniciada como @login.ProviderKey</div>
+                            </div>
+                        </div>
+                        @if (Model.ShowRemoveButton)
+                        {
+                            <form id="@($"remove-login-{login.LoginProvider}")" asp-page-handler="RemoveLogin" method="post" class="m-0">
+                                <input asp-for="@login.LoginProvider" name="LoginProvider" type="hidden">
+                                <input asp-for="@login.ProviderKey" name="ProviderKey" type="hidden">
+                                <button type="submit" class="btn btn-danger">Remover</button>
+                            </form>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <p>Não existem contas associadas.</p>
+            }
+
+            @if (Model.OtherLogins?.Count > 0)
+            {
+                <div class="mt-4">
+                    <h5 class="mb-3">Adicionar outro serviço de autenticação</h5>
+                    @foreach (var provider in Model.OtherLogins)
+                    {
+                        <div class="d-flex align-items-center justify-content-between p-3 border rounded mb-3">
+                            <div class="d-flex align-items-center">
+                                @if (provider.Name.ToLower() == "google")
+                                {
+                                    <img src="/images/google-icon.png" alt="Google" class="me-3" style="width: 24px; height: 24px;">
+                                }
+                                <div>
+                                    <div class="fw-bold">@provider.DisplayName</div>
+                                </div>
+                            </div>
+                            <form id="@($"link-login-form-{provider.Name}")" asp-page-handler="LinkLogin" method="post" class="m-0">
+                                <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name">
+                                    Associar
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

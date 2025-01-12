@@ -1,0 +1,190 @@
+﻿@model IEnumerable<Definitivo.Models.Autor>
+
+<div id="GerirAutoresTable">
+    @if (ViewData["MessageAutores"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+            @if (ViewData["MessageAutores"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageAutores"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["MessageAutores"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageAutores"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var successToast = document.getElementById('successToast');
+            var errorToast = document.getElementById('errorToast');
+
+            // Exibe o Toast de Sucesso se ele estiver presente
+            if (successToast) {
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            // Exibe o Toast de Erro se ele estiver presente
+            if (errorToast) {
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+            }
+            // Função para exibir os Toasts
+            function showNotificationsGerirAutores() {
+                var successToast = document.getElementById('successToast');
+                var errorToast = document.getElementById('errorToast');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                }
+            }
+
+        </script>
+
+    }
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var autor in Model)
+        {
+            <div class="col author-card"
+                 data-nome="@autor.Nome"
+                 data-nascimento="@autor.DataNascimento"
+                 data-nacionalidade="@autor.Nacionalidade">
+                <div class="card h-100 shadow-sm">
+                    <img src="@Url.Content("~/Images/Autores/" + autor.FotoNome)"
+                         alt="@autor.FotoNome"
+                         class="card-img-top"
+                         style="height: 250px; object-fit: cover;" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate">@Html.DisplayFor(modelItem => autor.Nome)</h5>
+                        <p class="card-text overflow-auto" style="max-height: 100px">@Html.DisplayFor(modelItem => autor.Biografia)</p>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item px-0">
+                                <small class="text-muted">Data de Nascimento:</small>
+                                <div>@Html.DisplayFor(modelItem => autor.DataNascimento)</div>
+                            </li>
+                            @if (autor.DataFalecimento.HasValue)
+                            {
+                                <li class="list-group-item px-0">
+                                    <small class="text-muted">Data de Falecimento:</small>
+                                    <div>@Html.DisplayFor(modelItem => autor.DataFalecimento)</div>
+                                </li>
+                            }
+                            <li class="list-group-item px-0">
+                                <small class="text-muted">Nacionalidade:</small>
+                                <div>@Html.DisplayFor(modelItem => autor.Nacionalidade)</div>
+                            </li>
+                        </ul>
+                        <div class="mt-auto d-flex gap-2">
+                            <a class="btn btn-primary flex-grow-1" asp-action="Edit" asp-route-id="@autor.Id">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <button class="btn btn-danger flex-grow-1"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#eliminarModal-@autor.Id">
+                                <i class="bi bi-trash"></i> 
+                                Excluir
+                            </button>
+                        </div>
+
+                        <!-- Eliminar Modal -->
+                        <div class="modal fade" id="eliminarModal-@autor.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem a certeza que deseja excluir o autor "@autor.Nome"?</p>
+                                        <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="bi bi-x-lg"></i> Cancelar
+                                        </button>
+                                        <form asp-action="Delete" asp-controller="Autores"
+                                              asp-route-id="@autor.Id" method="post"
+                                              data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#GerirAutoresTable"
+                                              data-ajax-loading="#waitGerirAutores" data-ajax-begin="hideBookGridGerirAutores();closeModalAutores();" data-ajax-complete="showBookGridGerirAutores()"
+
+                                              style="display: inline;">
+
+                                            <input type="hidden" name="orderSelectCopy" value="@ViewBag.orderSelect" />
+                                            <input type="hidden" name="searchBoxCopy" value="@ViewBag.QuerySearched" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-trash"></i> 
+                                                Excluir
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (Model != null && Model.Any())
+    {
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.PaginaAtual == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirAutores", new { searchBox = ViewBag.QuerySearched, paginaAtual = ViewBag.PaginaAtual - 1, orderSelect = ViewBag.orderSelect })" tabindex="@(ViewBag.PaginaAtual == 1 ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#GerirAutoresTable"
+                       data-ajax-loading="#waitGerirAutores" data-ajax-begin="hideBookGridGerirAutores()" data-ajax-complete="showBookGridGerirAutores()">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números da Página -->
+                @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("GerirAutores", new { searchBox = ViewBag.QuerySearched, paginaAtual = i, orderSelect = ViewBag.orderSelect })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#GerirAutoresTable"
+                           data-ajax-loading="#waitGerirAutores" data-ajax-begin="hideBookGridGerirAutores()" data-ajax-complete="showBookGridGerirAutores()"
+                        >@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirAutores", new { searchBox = ViewBag.QuerySearched, paginaAtual = ViewBag.PaginaAtual + 1, orderSelect = ViewBag.orderSelect })" tabindex="@(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#GerirAutoresTable"
+                       data-ajax-loading="#waitGerirAutores" data-ajax-begin="hideBookGridGerirAutores()" data-ajax-complete="showBookGridGerirAutores()"
+                    >
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

@@ -1,0 +1,105 @@
+﻿@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Confirmação de Email";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg w-100 max-w-md mx-auto border-0">
+        <!-- Toast Bootstrap -->
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Email reenviado com sucesso!
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header com ícone -->
+        <div class="card-header text-center bg-primary text-white py-4 border-0">
+            <i class="fas fa-envelope-open-text fa-3x mb-3"></i>
+            <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Mensagem Principal -->
+            <div class="text-center mb-4">
+                <h5 class="card-title mb-3">Verifique o seu Email</h5>
+                <p class="card-text text-muted">
+                    Enviámos um email de confirmação para a sua caixa de entrada.
+                    Por favor, verifique e clique no link para ativar a sua conta.
+                </p>
+            </div>
+
+            <!-- Status Alert -->
+            <div class="alert alert-info d-flex align-items-center shadow-sm" role="alert">
+                <i class="fas fa-info-circle me-3 fa-lg"></i>
+                <div>
+                    <strong>Importante:</strong>
+                    <p class="mb-0">O link de confirmação é válido por 24 horas.</p>
+                </div>
+            </div>
+
+            <!-- Instruções Adicionais -->
+            <div class="mt-4 bg-light p-3 rounded">
+                <h6 class="mb-3"><i class="fas fa-question-circle me-2"></i>Não recebeu o email?</h6>
+                <ul class="list-unstyled text-muted small">
+                    <li class="mb-2"><i class="fas fa-check me-2"></i>Verifique a pasta de spam</li>
+                    <li class="mb-2"><i class="fas fa-check me-2"></i>Confirme se o email está correto</li>
+                    <li><i class="fas fa-check me-2"></i>Aguarde alguns minutos</li>
+                </ul>
+            </div>
+
+            <div class="text-center mt-4">
+                <form method="post" asp-page-handler="ResendConfirmationEmail" id="resendForm">
+                    <input type="hidden" name="email" value="@Model.Email" />
+                    <button type="submit" class="btn btn-outline-primary resend-button" id="resendButton">
+                        <span class="button-content">
+                            <i class="fas fa-redo me-2"></i>
+                            <span class="button-text">Reenviar Email</span>
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        
+    </div>
+</div>
+
+<script>
+    document.getElementById('resendForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const button = document.getElementById('resendButton');
+        const buttonText = button.querySelector('.button-text');
+        const originalText = buttonText.textContent;
+
+        // Ativar estado de loading
+        button.classList.add('loading');
+        buttonText.textContent = 'A reenviar...';
+
+        setTimeout(() => {
+            // Enviar o formulário
+            this.submit();
+
+            // Mostrar toast usando Bootstrap
+            const toastElement = document.getElementById('successToast');
+            const toast = new bootstrap.Toast(toastElement, {
+                animation: true,
+                autohide: true,
+                delay: 3000
+            });
+            toast.show();
+
+            // Restaurar botão
+            button.classList.remove('loading');
+            buttonText.textContent = originalText;
+        }, 1500);
+    });
+</script>
+

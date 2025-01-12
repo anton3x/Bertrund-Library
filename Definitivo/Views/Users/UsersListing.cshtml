@@ -1,0 +1,399 @@
+﻿@model IEnumerable<Definitivo.Models.UserRolesViewModel>
+
+<div id="tableGerirUtilizadores">
+    @if (ViewData["MessageUsers"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+            @if (ViewData["MessageUsers"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageUsers"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["MessageUsers"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageUsers"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var successToast = document.getElementById('successToast');
+            var errorToast = document.getElementById('errorToast');
+
+            // Exibe o Toast de Sucesso se ele estiver presente
+            if (successToast) {
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            // Exibe o Toast de Erro se ele estiver presente
+            if (errorToast) {
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+            }
+            // Função para exibir os Toasts
+            function showNotificationsGerirUsers() {
+                var successToast = document.getElementById('successToast');
+                var errorToast = document.getElementById('errorToast');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                }
+            }
+
+        </script>
+
+    }
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-12 col-md-6 col-lg-4 mb-4">
+                <div class="cardTresD">
+                    <div class="card-body text-center text-md-start h-100 d-flex flex-column">
+                        <!-- Cabeçalho com foto e nome -->
+                        <div class="d-flex flex-column flex-md-row align-items-center mb-3">
+                            <img src="@Url.Content(string.IsNullOrEmpty(item.User.FotoNome) ? "~/Images/Users/userDefault.png" : "~/Images/Users/" + item.User.FotoNome)"
+                                 alt="@(string.IsNullOrEmpty(item.User.FotoNome) ? "Foto padrão" : item.User.FotoNome)"
+                                 class="img-fluid rounded-circle mb-2 mb-md-0 me-md-3"
+                                 style="width: 60px; height: 60px; object-fit: cover;" />
+
+                            <div>
+                                <h5 class="card-title mb-0">@((item.User.NormalizedUserName.Count() > 30) ? item.User.NormalizedUserName.Substring(0, 30).ToLower() + "..." : item.User.NormalizedUserName.ToLower())</h5>
+                                <p class="card-text"><small>@item.Role</small></p>
+                            </div>
+                        </div>
+
+                        <!-- Informações do usuário -->
+                        <div class="flex-grow-1">
+                            <p class="card-text mb-2 d-md-none" @(item.User.NormalizedEmail.Count() > 42 ? $"data-bs-toggle=tooltip data-bs-html=true data-bs-title={item.User.NormalizedEmail.ToLower()}" : "")>
+                                <strong>Email:</strong>&nbsp;@((item.User.NormalizedEmail.Count() > 42) ? item.User.NormalizedEmail.Substring(0, 42).ToLower() + "..." : item.User.NormalizedEmail.ToLower())
+                            </p>
+                            <p class="card-text mb-2 d-none d-md-block d-xl-none " @(item.User.NormalizedEmail.Count() > 25 ? $"data-bs-toggle=tooltip data-bs-html=true data-bs-title={item.User.NormalizedEmail.ToLower()}" : "")>
+                                <strong>Email:</strong>&nbsp;@((item.User.NormalizedEmail.Count() > 25) ? item.User.NormalizedEmail.Substring(0, 25).ToLower() + "..." : item.User.NormalizedEmail.ToLower())
+                            </p>
+                            <p class="card-text mb-2 d-none d-xl-block" @(item.User.NormalizedEmail.Count() > 32 ? $"data-bs-toggle=tooltip data-bs-html=true data-bs-title={item.User.NormalizedEmail.ToLower()}" : "")>
+                                <strong>Email:</strong>&nbsp;@((item.User.NormalizedEmail.Count() > 32) ? item.User.NormalizedEmail.Substring(0, 32).ToLower() + "..." : item.User.NormalizedEmail.ToLower())
+                            </p>
+                            <p class="card-text mb-2"><strong>Estado:</strong>&nbsp;@item.User.EstadoAtivacao</p>
+                            @if (item.Role == "Leitor")
+                            {
+                                <p class="card-text mb-2"><strong>Emprestimos Cancelados:</strong>&nbsp;@(item.User.NumeroEmprestimosCanceladosPorEntregar)</p>
+                            }
+                            @if (item.Role == "Admin")
+                            {
+                                <p class="card-text mb-2"><strong>Criador:</strong>&nbsp;@(@item.AdministradorQueOCriou != null ? @item.AdministradorQueOCriou.UserName : "Sistema")</p>
+                            }
+                        </div>
+                
+                        <!-- Botões -->
+                        <div class="d-flex flex-wrap gap-2 mt-auto">
+                            @if (item.Role != "Admin")
+                            {
+                                <a class="btn btn-primary flex-grow-1" asp-action="Edit" asp-route-id="@item.User.Id">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Editar
+                                    </a>
+                        
+                            }
+                            @if (item.Role == "Leitor")
+                            {
+                                <!--<a class="btn btn-danger flex-grow-1" asp-action="Delete" asp-route-id="@item.User.Id">Eliminar</a>-->
+                                <button class="btn btn-danger flex-grow-1"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#eliminarModal-@item.User.Id">
+                                    <i class="bi bi-trash"></i> 
+                                    Excluir
+                                </button>
+                            }
+                            @if (item.Role == "Leitor" || (item.Role == "Bibliotecario" && item.User.EstadoAtivacao != "PorAtivar"))
+                            {
+                                @if (item.User.EstadoAtivacao == "Ativo")
+                                {
+                                    <button type="button"
+                                            class="btn btn-warning flex-grow-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#bloquearModal-@item.User.Id">
+                                        <i class="bi bi-lock-fill"></i>
+                                        Bloquear
+                                    </button>
+                                }
+                                else if (item.User.EstadoAtivacao == "Bloqueado")
+                                {
+                                    <button type="button"
+                                            class="btn btn-success flex-grow-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#desbloquearModal-@item.User.Id">
+                                        <i class="bi bi-unlock-fill"></i>
+                                        Desbloquear
+                                    </button>
+                                }
+                            }
+                            @if (item.Role == "Bibliotecario" && item.User.EstadoAtivacao == "PorAtivar")
+                            {
+                                <button type="button"
+                                        class="btn btn-success flex-grow-1"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#aprovarModal-@item.User.Id">
+                                    <i class="bi bi-check-lg"></i>
+                                    Aprovar
+                                </button>
+
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eliminar Modal -->
+            <div class="modal fade" id="eliminarModal-@item.User.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que pretende eliminar o utilizador "@item.User.UserName"?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i>
+                                Cancelar
+                            </button>
+                            <form asp-action="Delete" asp-controller="Users"
+                                  asp-route-id="@item.User.Id" method="post"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+                                  data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores();closeModalUtilizadores();" data-ajax-complete="showBookGridGerirUtilizadores();"
+                                  style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderSelectUsersCopy" value="@ViewBag.SortOrder" />
+                                <input type="hidden" name="searchTermUsersCopy" value="@ViewBag.query" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i> 
+                                    Excluir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desbloquear Modal -->
+            <div class="modal fade" id="desbloquearModal-@item.User.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Desbloqueio</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que pretende desbloquear o utilizador "@item.User.UserName"?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i>
+                                Cancelar
+                            </button>
+                            <form asp-action="Desbloquear" asp-controller="Users"
+                                  asp-route-id="@item.User.Id" method="post"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+                                  data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores();closeModalUtilizadores();" data-ajax-complete="showBookGridGerirUtilizadores();"
+                                  style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderSelectUsersCopy" value="@ViewBag.SortOrder" />
+                                <input type="hidden" name="searchTermUsersCopy" value="@ViewBag.query" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-unlock-fill"></i> 
+                                    Desbloquear
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aprovar Modal -->
+            <div class="modal fade" id="aprovarModal-@item.User.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Aprovação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que pretende aprovar o utilizador "@item.User.UserName"?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i>
+                                Cancelar
+                            </button>
+                            <form asp-action="Aprovar" asp-controller="Users"
+                                  asp-route-id="@item.User.Id" method="post"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+                                  data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores();closeModalUtilizadores();" data-ajax-complete="showBookGridGerirUtilizadores();"
+                                  style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderSelectUsersCopy" value="@ViewBag.SortOrder" />
+                                <input type="hidden" name="searchTermUsersCopy" value="@ViewBag.query" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg"></i>
+                                    Aprovar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal bloquear -->
+            <div class="modal fade" id="bloquearModal-@item.User.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="bloquearModalLabel">Bloquear Utilizador</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="bloquearForm" asp-action="Bloquear" asp-route-userId="@item.User.Id" method="post"
+                              data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+                              data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores();closeModalUtilizadores();" data-ajax-complete="showBookGridGerirUtilizadores();">
+                            <div class="modal-body">
+                                <input type="hidden" name="orderSelectUsersCopy" value="@ViewBag.SortOrder" />
+                                <input type="hidden" name="searchTermUsersCopy" value="@ViewBag.query" />
+                                <div class="mb-3">
+                                    <label class="form-label">Utilizador:</label>
+                                    <input type="text" class="form-control" id="userName" value="@item.User.UserName" readonly />
+                                </div>
+                                <div class="mb-3">
+                                    <label for="motivo" class="form-label">Motivo do Bloqueio:</label>
+                                    <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-lg"></i>
+                                    Cancelar
+                                    </button>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-lock-fill"></i>
+                                    Bloquear
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    @if(Model.Any())
+    {
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.PaginaAtual == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirUtilizadores", new { query = ViewBag.query, paginaAtual = ViewBag.PaginaAtual - 1, sortOrder = ViewBag.SortOrder })" tabindex="@(ViewBag.PaginaAtual == 1 ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+                       data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores()" data-ajax-complete="showBookGridGerirUtilizadores();">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números das Páginas -->
+                @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("GerirUtilizadores", new { query = ViewBag.query, paginaAtual = i, sortOrder = ViewBag.SortOrder })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+                           data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores()" data-ajax-complete="showBookGridGerirUtilizadores();">@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirUtilizadores", new { query = ViewBag.query, paginaAtual = ViewBag.PaginaAtual + 1, sortOrder = ViewBag.SortOrder })" tabindex="@(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+                       data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores()" data-ajax-complete="showBookGridGerirUtilizadores();">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+
+</div>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var bloquearModal = document.getElementById('bloquearModal');
+        bloquearModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var userId = button.getAttribute('data-user-id');
+            var userName = button.getAttribute('data-user-name');
+
+            var modal = this;
+            modal.querySelector('#userId').value = userId;
+            modal.querySelector('#userName').value = userName;
+        });
+    });
+</script>
+<style>
+    .cardTresD {
+        height: 300px;
+        border-radius: 8px;
+        background: var(--bs-card-bg);
+        transition: transform 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+    }
+
+        .cardTresD:hover {
+            transform: translateY(-5px);
+        }
+
+    /* Modo claro */
+    [data-bs-theme="light"] .cardTresD {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+        [data-bs-theme="light"] .cardTresD:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+    /* Modo escuro */
+    [data-bs-theme="dark"] .cardTresD {
+        box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2);
+        background-color: #2b3035;
+    }
+
+        [data-bs-theme="dark"] .cardTresD:hover {
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+        }
+
+
+
+</style>

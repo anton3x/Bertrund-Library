@@ -1,0 +1,124 @@
+﻿@model Definitivo.Models.FormularioLivroViewModel
+
+<div id="buttonFavoritosEmprestimoLivroDiv">
+    @if (ViewData["MessageFavoritosPage"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-1" id="toastContainer2">
+            @if (ViewData["MessageFavoritosPage"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageFavoritosPage"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["MessageFavoritosPage"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageFavoritosPage"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var toastContainer = document.getElementById('toastContainer2');
+            var successToast = document.getElementById('successToast');
+            var errorToast = document.getElementById('errorToast');
+
+            // Adiciona os toasts ao container
+            if (successToast) {
+                toastContainer.appendChild(successToast); // Adiciona o toast de sucesso ao final
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            if (errorToast) {
+                toastContainer.appendChild(errorToast); // Adiciona o toast de erro ao final
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+                }
+            // Função para exibir os Toasts
+            function showNotificationsFavoritosPage() {
+                var toastContainer = document.getElementById('toastContainer2');
+                var successToast = document.getElementById('successToast');
+                var errorToast = document.getElementById('errorToast');
+
+                // Adiciona os toasts ao container
+                if (successToast) {
+                    toastContainer.appendChild(successToast); // Adiciona o toast de sucesso ao final
+                        var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                if (errorToast) {
+                    toastContainer.appendChild(errorToast); // Adiciona o toast de erro ao final
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                    }
+            }
+
+                document.getElementById('toastContainer2').style.display = 'block';
+                    document.getElementById('toastContainer1').style.display = 'none';
+                            document.getElementById('toastContainerShare').style.display = 'none';
+
+        </script>
+
+    }
+    <form asp-action="@Model.ActionLivro" asp-controller="Livros"
+          asp-route-livroId="@Model.LivroId" asp-route-veioDaPaginaDoLivro="True"
+          method="get" class="mb-2" data-ajax="true" data-ajax-method="get"
+          data-ajax-mode="replace" data-ajax-update="#buttonFavoritosEmprestimoLivroDiv"
+          data-ajax-loading="#waitFavoritoLivro" data-ajax-begin="hideFavoritoButton()" data-ajax-complete="showFavoritoButton();atualizarValoresGerirEmprestimos(@Model.LivroId);">
+        <button type="submit" class="btn @Model.FavoritosClasse w-100 d-flex align-items-center justify-content-center" id="btnFavoritoViewBook"
+        >
+            <div id="waitFavoritoLivro" class="d-none me-2">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            </div>
+            <i id="iconFavoritoLivro" class="bi bi-heart @Model.FavoritosIcon me-1"></i>
+            <span id="botaoTextoFavoritos">@Model.BotaoTexto</span>
+        </button>
+
+    </form>
+</div>
+
+
+
+<script>
+    function hideFavoritoButton() {
+        // Desabilita o botão e exibe o carregando
+        document.getElementById('btnFavoritoViewBook').disabled = true;
+        document.getElementById('waitFavoritoLivro').classList.remove('d-none'); // Exibe o spinner
+        document.getElementById('waitFavoritoLivro').classList.add('d-flex');  // Garante que o spinner tenha exibição flexível
+        document.getElementById('iconFavoritoLivro').style.display = 'none'; // Esconde o texto do botão enquanto carrega
+    }
+
+    function showFavoritoButton() {
+        // Habilita o botão e esconde o carregando
+        document.getElementById('btnFavoritoViewBook').disabled = false;
+        document.getElementById('waitFavoritoLivro').classList.remove('d-flex'); // Remove o spinner
+        document.getElementById('waitFavoritoLivro').classList.add('d-none'); // Esconde o spinner
+        document.getElementById('iconFavoritoLivro').style.display = 'inline'; // Exibe o texto do botão novamente
+    }
+
+</script>
+<style>
+    /* Ajuste para que os toasts fiquem empilhados */
+    .toast-container {
+        z-index: 1050; /* Torna a toast-container visível acima de outros elementos */
+    }
+
+    .toast {
+        margin-top: 10px; /* Espaçamento entre os toasts */
+    }
+</style>

@@ -1,0 +1,376 @@
+﻿@model IEnumerable<Definitivo.Models.Emprestimo>
+@{
+    var possoEditarEmprestimos = false;
+}
+
+<div id="GerirEmprestimosTable">
+    @if (ViewData["MessageEmprestimos"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+            @if (ViewData["MessageEmprestimos"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageEmprestimos"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["MessageEmprestimos"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageEmprestimos"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var successToast = document.getElementById('successToast');
+            var errorToast = document.getElementById('errorToast');
+
+            // Exibe o Toast de Sucesso se ele estiver presente
+            if (successToast) {
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            // Exibe o Toast de Erro se ele estiver presente
+            if (errorToast) {
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+            }
+            // Função para exibir os Toasts
+            function showNotificationsGerirEmprestimos() {
+                var successToast = document.getElementById('successToast');
+                var errorToast = document.getElementById('errorToast');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                }
+            }
+
+        </script>
+
+    }
+    <!-- Listagem de Empréstimos com Cartões -->
+    <div class="row">
+        @foreach (var emprestimo in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm rounded-3 border d-flex flex-column">
+                    <div class="card-body flex-grow-1 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title text-truncate mb-0" style="max-width: 70%;">@emprestimo.Livro.Titulo</h5>
+                            <span class="badge rounded-pill @(emprestimo.DataPrevista != null && emprestimo.DataDevolucao == null ? "bg-success" : emprestimo.DataPrevista == null ? "bg-warning" : emprestimo.DataDevolucao != null ? "bg-primary" : "bg-danger")">
+                                @if (emprestimo.DataPrevista == null)
+                                {
+                                    <i class="bi bi-clock me-1"></i>
+                                    <span>Pendente</span>
+                                }
+                                else if (emprestimo.DataPrevista != null && emprestimo.DataDevolucao == null)
+                                {
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    <span>Ativo</span>
+                                }
+                                else if (emprestimo.DataPrevista != null && emprestimo.DataDevolucao != null)
+                                {
+                                    <i class="bi bi-arrow-return-left me-1"></i>
+                                    <span>Devolvido</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    <span>Atrasado</span>
+                                }
+                            </span>
+                        </div>
+
+                        <!-- Abas (Tabs) -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="pedido-tab-@emprestimo.Id" data-bs-toggle="tab" data-bs-target="#pedido-@emprestimo.Id" type="button" role="tab" aria-controls="pedido-@emprestimo.Id" aria-selected="true">
+                                    Pedido
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="entrega-tab-@emprestimo.Id" data-bs-toggle="tab" data-bs-target="#entrega-@emprestimo.Id" type="button" role="tab" aria-controls="entrega-@emprestimo.Id" aria-selected="true">
+                                    Entrega
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="devolucao-tab-@emprestimo.Id" data-bs-toggle="tab" data-bs-target="#devolucao-@emprestimo.Id" type="button" role="tab" aria-controls="devolucao-@emprestimo.Id" aria-selected="false">
+                                    Devolução
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Conteúdo das Abas -->
+                        <div class="tab-content">
+                            <!-- Aba Pedido -->
+                            <div class="tab-pane fade show active" id="pedido-@emprestimo.Id" role="tabpanel" aria-labelledby="pedido-tab-@emprestimo.Id">
+                                <div class="info-grid mb-4">
+                                    <div class="info-item">
+                                        <small class="text-muted">Autor</small>
+                                        <p class="mb-2">@emprestimo.Livro.Autor.Nome</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <small class="text-muted">Cliente</small>
+                                        <p class="mb-2">@emprestimo.Perfil.UserName</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Aba Entrega -->
+                            <div class="tab-pane fade show" id="entrega-@emprestimo.Id" role="tabpanel" aria-labelledby="entrega-tab-@emprestimo.Id">
+                                <div class="info-grid mb-0">
+                                    @if (emprestimo.DataPrevista.HasValue)
+                                    {
+                                        <div class="info-item">
+                                            <small class="text-muted">Entregue Por</small>
+                                            <p class="mb-2">@emprestimo.BibliotecarioEntregou.UserName</p>
+                                        </div>
+                                        <div class="info-item">
+                                            <small class="text-muted">Entregue Em</small>
+                                            <p class="mb-2">@emprestimo.DataPrevista.Value.AddDays(-15).ToString("dd/MM/yyyy HH:mm")</p>
+                                        </div>
+                                        @if (!emprestimo.DataDevolucao.HasValue)
+                                        {
+                                            <div class="info-item">
+                                                <small class="text-muted">Data Prevista De Devolução</small>
+                                                <p class="mb-2">@emprestimo.DataPrevista?.ToString("dd/MM/yyyy HH:mm")</p>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">Livro ainda não foi entregue</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Aba Devolução -->
+                            <div class="tab-pane fade" id="devolucao-@emprestimo.Id" role="tabpanel" aria-labelledby="devolucao-tab-@emprestimo.Id">
+                                @if (emprestimo.DataDevolucao.HasValue)
+                                {
+                                    <div class="info-grid mb-4">
+                                        <div class="info-item">
+                                            <small class="text-muted">Devolvido a</small>
+                                            <p class="mb-2">@emprestimo.BibliotecarioRecebeu.UserName</p>
+                                        </div>
+                                        <div class="info-item">
+                                            <small class="text-muted">Devolvido em</small>
+                                            <p class="mb-2">@emprestimo.DataDevolucao?.ToString("dd/MM/yyyy HH:mm")</p>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">Livro ainda não foi devolvido</small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="mt-auto p-3">
+                        <div class="d-flex gap-2">
+                            @if(possoEditarEmprestimos == true)
+                            {
+                                <a href="@Url.Action("Edit", new { id = emprestimo.Id })" class="btn btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-pencil-square me-1"></i>
+                                    Editar
+                                </a>
+                            }
+                            @if (emprestimo.DataPrevista == null || emprestimo.DataDevolucao != null)
+                            {
+	                            <button class="btn btn-outline-danger flex-grow-1" data-bs-toggle="modal" data-bs-target="#eliminarModal-@emprestimo.Id">
+		                            <i class="bi bi-trash me-1"></i> 
+		                            Excluir
+	                            </button>
+                            }
+                            @if (emprestimo.DataPrevista == null)
+                            {
+                                <button class="btn btn-outline-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#aprovarModal-@emprestimo.Id">
+                                    <i class="bi bi-check2 me-1"></i>
+                                    Aprovar
+                                </button>
+                            }
+                            else if (emprestimo.DataPrevista != null && emprestimo.DataDevolucao == null)
+                            {
+                                <button class="btn btn-outline-warning flex-grow-1" data-bs-toggle="modal" data-bs-target="#devolverModal-@emprestimo.Id">
+                                    <i class="bi bi-arrow-return-left me-1"></i>
+                                    Devolver
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Eliminar Modal -->
+            <div class="modal fade" id="eliminarModal-@emprestimo.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que deseja excluir o emprestimo do livro "@emprestimo.Livro.Titulo"?</p>
+                            <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i> Cancelar
+                            </button>
+                            <form asp-action="Delete" asp-controller="Emprestimos"
+                                  asp-route-id="@emprestimo.Id" method="post"
+                                  style="display: inline;"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#GerirEmprestimosTable"
+                                  data-ajax-loading="#waitGerirEmprestimos" data-ajax-begin="hideBookGridGerirEmprestimos();closeModalEmprestimos();" data-ajax-complete="showBookGridGerirEmprestimos();atualizarValoresGerirEmprestimos();">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderSelectEmprestimosCopy" value="@ViewBag.orderSelect" />
+                                <input type="hidden" name="searchTermEmprestimosCopy" value="@ViewBag.SearchTerm" />
+                                <input type="hidden" name="filterStatusEmprestimosCopy" value="@ViewBag.StatusFilter" />
+
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i> 
+                                    Excluir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Devolver Modal -->
+            <div class="modal fade" id="devolverModal-@emprestimo.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Devolução</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que deseja devolver o livro "@emprestimo.Livro.Titulo"?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i> Cancelar
+                            </button>
+                            <form asp-controller="Livros"
+                                  asp-action="DevolverLivro"
+                                  asp-route-livroId="@emprestimo.LivroId"
+                                  asp-route-userId="@emprestimo.PerfilId"
+                                  method="post"
+                                  style="display: inline;"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#GerirEmprestimosTable"
+                                  data-ajax-loading="#waitGerirEmprestimos" data-ajax-begin="hideBookGridGerirEmprestimos();closeModalEmprestimos();" data-ajax-complete="showBookGridGerirEmprestimos();atualizarValoresGerirEmprestimos();">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderSelectEmprestimosCopy" value="@ViewBag.orderSelect" />
+                                <input type="hidden" name="searchTermEmprestimosCopy" value="@ViewBag.SearchTerm" />
+                                <input type="hidden" name="filterStatusEmprestimosCopy" value="@ViewBag.StatusFilter" />
+                                <input type="hidden" name="inBookPage" value="false" />
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-arrow-return-left"></i>
+                                    Devolver
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aprovar Modal -->
+            <div class="modal fade" id="aprovarModal-@emprestimo.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Aprovação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que deseja aprovar o empréstimo do livro "@emprestimo.Livro.Titulo"?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i> Cancelar
+                            </button>
+                            <form asp-controller="Livros"
+                                  asp-action="AprovarEmprestimo"
+                                  asp-route-livroId="@emprestimo.LivroId"
+                                  asp-route-userId="@emprestimo.PerfilId"
+                                  method="post"
+                                  style="display: inline;"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#GerirEmprestimosTable"
+                                  data-ajax-loading="#waitGerirEmprestimos" data-ajax-begin="hideBookGridGerirEmprestimos();closeModalEmprestimos();" data-ajax-complete="showBookGridGerirEmprestimos();atualizarValoresGerirEmprestimos();">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderSelectEmprestimosCopy" value="@ViewBag.orderSelect" />
+                                <input type="hidden" name="searchTermEmprestimosCopy" value="@ViewBag.SearchTerm" />
+                                <input type="hidden" name="filterStatusEmprestimosCopy" value="@ViewBag.StatusFilter" />
+                                <input type="hidden" name="inBookPage" value="false" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg"></i>
+                                    Aprovar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (Model != null && Model.Any())
+    {
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.PaginaAtual == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirEmprestimos", new { searchTerm = ViewBag.SearchTerm, filterStatus = ViewBag.StatusFilter, orderSelect = ViewBag.OrderSelect, paginaAtual = ViewBag.PaginaAtual - 1 })" tabindex="@(ViewBag.PaginaAtual == 1 ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#GerirEmprestimosTable"
+                       data-ajax-loading="#waitGerirEmprestimos" data-ajax-begin="hideBookGridGerirEmprestimos()" data-ajax-complete="showBookGridGerirEmprestimos();">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números das Páginas -->
+                @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("GerirEmprestimos", new { searchTerm = ViewBag.SearchTerm, filterStatus = ViewBag.StatusFilter, orderSelect = ViewBag.OrderSelect, paginaAtual = i })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#GerirEmprestimosTable"
+                           data-ajax-loading="#waitGerirEmprestimos" data-ajax-begin="hideBookGridGerirEmprestimos()" data-ajax-complete="showBookGridGerirEmprestimos();">@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirEmprestimos", new { searchTerm = ViewBag.SearchTerm, filterStatus = ViewBag.StatusFilter, orderSelect = ViewBag.OrderSelect, paginaAtual = ViewBag.PaginaAtual + 1 })" tabindex="@(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#GerirEmprestimosTable"
+                       data-ajax-loading="#waitGerirEmprestimos" data-ajax-begin="hideBookGridGerirEmprestimos()" data-ajax-complete="showBookGridGerirEmprestimos();">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

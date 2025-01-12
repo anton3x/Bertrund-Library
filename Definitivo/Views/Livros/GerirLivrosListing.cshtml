@@ -1,0 +1,279 @@
+﻿@model IEnumerable<Definitivo.Models.Livro>
+
+<div id="tabelaGerirLivros">
+    @if (ViewData["Message"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+            @if (ViewData["Message"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["Message"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["Message"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["Message"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var successToast = document.getElementById('successToast');
+            var errorToast = document.getElementById('errorToast');
+
+            // Exibe o Toast de Sucesso se ele estiver presente
+            if (successToast) {
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            // Exibe o Toast de Erro se ele estiver presente
+            if (errorToast) {
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+            }
+            // Função para exibir os Toasts
+            function showNotificationsGerirLivros() {
+                var successToast = document.getElementById('successToast');
+                var errorToast = document.getElementById('errorToast');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                }
+            }
+
+        </script>
+
+    }
+    <!-- Books Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        @foreach (var book in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="position-relative">
+                        <img src="@Url.Content("~/Images/Livros/" + (string.IsNullOrEmpty(book.FotoNome) ? "bookDefault.jpeg" : book.FotoNome))"
+                             class="card-img-top"
+                             alt="@book.Titulo"
+                             style="height: 250px; object-fit: cover;">
+                        <div class="position-absolute top-0 end-0 p-2">
+                            <span class="badge @(book.Estado == "Disponível" ? "bg-success" : "bg-danger")">
+                                @book.Estado
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">@book.Titulo</h5>
+                        <div class="small text-muted mb-2">@book.Autor.Nome</div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-dark">@book.Categoria.Nome</span>
+                            <span class="small">ISBN: @book.ISBN</span>
+                        </div>
+
+                        <div class="progress mb-2" style="height: 5px;">
+                            <div class="progress-bar bg-success"
+                                 style="width: @((book.NumeroExemplaresDisponiveis * 100 / book.NumeroExemplaresTotal).ToString())%">
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            @book.NumeroExemplaresDisponiveis/@book.NumeroExemplaresTotal exemplares
+                        </small>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-outline-primary flex-grow-1" asp-action="Edit" asp-route-id="@book.ID">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <button class="btn btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal-@book.ID">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            @if (book.Estado == "Desativado")
+                            {
+                                <button class="btn btn-outline-success"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#ativarModal-@book.ID">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                </button>   
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#desativarModal-@book.ID">
+                                    <i class="bi bi-exclamation-octagon-fill"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Modal -->
+            <div class="modal fade" id="deleteModal-@book.ID" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que deseja excluir o livro "@book.Titulo"?</p>
+                            <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i>
+                                Cancelar
+                            </button>
+                            <form asp-action="Delete" asp-route-id="@book.ID" method="post" style="display: inline;"
+                                  data-ajax="true" data-ajax-method="post" 
+                                  data-ajax-mode="replace" 
+                                  data-ajax-loading="#waitGerirLivros"
+                                  data-ajax-update="#tabelaGerirLivros"
+                                  data-ajax-begin="hideBookGridGerirLivros();closeModalLivros();"
+                                  data-ajax-complete="showBookGridGerirLivros();">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="searchBoxLivrosCopy" value="@ViewBag.QuerySearched" />
+                                <input type="hidden" name="stateLivrosCopy" value="@ViewBag.StateSelected" />
+                                <input type="hidden" name="categoryLivroCopy" value="@ViewBag.CategorySelected" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                    Excluir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desativar Modal -->
+            <div class="modal fade" id="desativarModal-@book.ID" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Desativação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que deseja desativar o livro "@book.Titulo"?</p>
+                            <p class="text-danger"><small>O livro ficará indisponível para empréstimos.</small></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i> 
+                                Cancelar
+                            </button>
+                            <form asp-action="DesativarLivro" asp-route-id="@book.ID" method="post" style="display: inline;"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#tabelaGerirLivros"
+                                  data-ajax-loading="#waitGerirLivros" data-ajax-begin="hideBookGridGerirLivros();closeModalLivros();" data-ajax-complete="showBookGridGerirLivros()">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="searchBoxLivrosCopy" value="@ViewBag.QuerySearched" />
+                                <input type="hidden" name="stateLivrosCopy" value="@ViewBag.StateSelected" />
+                                <input type="hidden" name="categoryLivroCopy" value="@ViewBag.CategorySelected" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-power"></i> 
+                                    Desativar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ativar Modal -->
+            <div class="modal fade" id="ativarModal-@book.ID" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar Ativação</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem a certeza que deseja ativar o livro "@book.Titulo"?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg"></i> 
+                                Cancelar
+                            </button>
+                            <form asp-action="AtivarLivro" asp-route-id="@book.ID" method="post" style="display: inline;"
+                                  data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#tabelaGerirLivros"
+                                  data-ajax-loading="#waitGerirLivros" data-ajax-begin="hideBookGridGerirLivros();closeModalLivros();" data-ajax-complete="showBookGridGerirLivros()">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="searchBoxLivrosCopy" value="@ViewBag.QuerySearched" />
+                                <input type="hidden" name="stateLivrosCopy" value="@ViewBag.StateSelected" />
+                                <input type="hidden" name="categoryLivroCopy" value="@ViewBag.CategorySelected" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg"></i> 
+                                    Ativar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        }
+    </div>
+    @if (Model != null && Model.Any())
+    {
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.PaginaAtual == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirLivros", new { query = ViewBag.QuerySearched, paginaAtual = ViewBag.PaginaAtual - 1, category = ViewBag.CategorySelected, state = ViewBag.StateSelected })" tabindex="@(ViewBag.PaginaAtual == 1 ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tabelaGerirLivros"
+                       data-ajax-loading="#waitGerirLivros" data-ajax-begin="hideBookGridGerirLivros()" data-ajax-complete="showBookGridGerirLivros()">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números das Páginas -->
+                @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("GerirLivros", new { query = ViewBag.QuerySearched, paginaAtual = i, category = ViewBag.CategorySelected, state = ViewBag.StateSelected })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tabelaGerirLivros"
+                           data-ajax-loading="#waitGerirLivros" data-ajax-begin="hideBookGridGerirLivros()" data-ajax-complete="showBookGridGerirLivros()">@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirLivros", new { query = ViewBag.QuerySearched, paginaAtual = ViewBag.PaginaAtual + 1, category = ViewBag.CategorySelected, state = ViewBag.StateSelected })" tabindex="@(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tabelaGerirLivros"
+                       data-ajax-loading="#waitGerirLivros" data-ajax-begin="hideBookGridGerirLivros()" data-ajax-complete="showBookGridGerirLivros()">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+
+</div>

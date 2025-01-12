@@ -1,0 +1,96 @@
+﻿@model IEnumerable<Definitivo.Models.Autor>
+
+@{
+    ViewBag.Title = "Gerir Autores";
+}
+
+<div class="container">
+    <main class="mb-4">
+        <h1 class="h4 mb-4 mt-4">Gerir Autores</h1>
+        
+        <form action="/Autores/GerirAutores" method="get" id="GerirAutoresOrderSearchForm"
+                data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+              data-ajax-update="#GerirAutoresTable" data-ajax-loading="#waitGerirAutores" data-ajax-begin="hideBookGridGerirAutores()" data-ajax-complete="showBookGridGerirAutores()">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" name="searchBox" id="searchInput" class="form-control" placeholder="Procurar autor..." value="@ViewBag.QuerySearched">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 mt-2 mt-md-0">
+                    <select class="form-select" id="searchOrder" name="orderSelect" onchange="$('#GerirAutoresOrderSearchForm').submit();">
+                        <option value="" selected="@(ViewBag.orderSelect == "Nenhum")">Ordenar por...</option>
+                        <option value="nome" selected="@(ViewBag.orderSelect == "nome")">Nome  ↑</option>
+                        <option value="nome_desc" selected="@(ViewBag.orderSelect == "nome_desc")">Nome ↓</option>
+                        <option value="data" selected="@(ViewBag.orderSelect == "data")">Data de Nascimento  ↑</option>
+                        <option value="data_desc" selected="@(ViewBag.orderSelect == "data_desc")">Data de Nascimento ↓</option>
+                        <option value="nacionalidade" selected="@(ViewBag.orderSelect == "nacionalidade")">Nacionalidade  ↑</option>
+                        <option value="nacionalidade_desc" selected="@(ViewBag.orderSelect == "nacionalidade_desc")">Nacionalidade ↓</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mt-2 mt-md-0">
+                    <a class="btn btn-success w-100" asp-action="Create">
+                        <i class="bi bi-plus-lg"></i>
+                        Adicionar Autor
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Loading -->
+        <div id="waitGerirAutores" style="display:none" class="justify-content-center">
+            <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+            <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+        </div>
+
+        <partial name="GerirAutoresListing" model="Model" />
+
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            showNotificationsGerirAutores();
+        });
+
+        $("#searchInput").autocomplete({
+            source: @ViewBag.TagsAutores,
+            minLength: 3
+        });
+
+        function hideBookGridGerirAutores() {
+            // Oculta a div que contém a grid de Categorias
+            document.getElementById('GerirAutoresTable').style.display = 'none';
+            document.getElementById('waitGerirAutores').classList.add('d-flex'); // Add the d-flex class
+            document.getElementById('waitGerirAutores').style.display = 'block'; // Ensure it's visible
+        }
+
+        function showBookGridGerirAutores() {
+            // Exibe novamente a div que contém a grid de Categorias
+            document.getElementById('GerirAutoresTable').style.display = 'block';
+            document.getElementById('waitGerirAutores').classList.remove('d-flex'); // Remove the d-flex class
+            document.getElementById('waitGerirAutores').style.display = 'none'; // Hide the element
+        }
+        function closeModalAutores() {
+            const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+            if (modal) {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+                bootstrapModal.hide(); // Fecha o modal
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl, {
+                    autohide: true,
+                    delay: 3000
+                });
+            });
+            toastList.forEach(toast => toast.show());
+        });
+    </script>
+}

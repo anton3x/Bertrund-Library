@@ -1,0 +1,116 @@
+﻿@page
+@model IndexModel
+
+@{
+    ViewData["Title"] = "Perfil";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+
+<h3 class="fw-bold"><i class="bi bi-person-circle"></i> @ViewData["Title"]</h3>
+<p class="text-muted mb-4">Estas são suas informações públicas</p>
+<partial name="_StatusMessage" for="StatusMessage" />
+<div class="row">
+    <form id="profile-form" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <div class="form-floating mb-3">
+            <input asp-for="Username" class="form-control" placeholder="Por favor, escolha o seu nome de utilizador." disabled />
+            <label asp-for="Username" class="form-label">Nome de Utilizador</label>
+        </div>
+        <div class="form-floating mb-3">
+            <!--<label for="phone" class="form-label">Número de Telemóvel</label>-->
+            <input type="tel"
+                   asp-for="Input.PhoneNumber"
+                   id="phone"
+                   class="form-control"
+                   placeholder="Número de Telemóvel"
+                   style="height: 58px;" />
+            <span id="valid-msg" class="text-success d-none">✓ Válido</span>
+            <span id="error-msg" class="text-danger d-none"></span>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input asp-for="Input.Morada" class="form-control" placeholder="Por favor, insira a sua morada." />
+            <label asp-for="Input.Morada" class="form-label">Morada</label>
+            <span asp-validation-for="Input.Morada" class="text-danger"></span>
+        </div>
+        <div class="mb-3 d-flex justify-content-end">
+            <button id="update-profile-button" type="submit" class="w-auto btn btn-lg btn-primary " style="min-width: 25%;">Guardar</button>
+        </div>
+    </form>
+</div>
+
+
+<style>
+    .iti {
+        width: 100%;
+    }
+
+        /* Ajusta o campo de input dentro do intlTelInput */
+        .iti input[type="tel"] {
+            width: 100%;
+            padding-left: 60px; /* Espaço para o código do país */
+            box-sizing: border-box;
+        }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const input = document.querySelector("#phone");
+        const button = document.getElementById("update-profile-button");
+        const form = document.getElementById("profile-form");
+        const errorMsg = document.querySelector("#error-msg");
+        const validMsg = document.querySelector("#valid-msg");
+
+        // Mapa de mensagens de erro
+        const errorMap = ["Número inválido", "Código de país inválido", "Muito curto", "Muito longo", "Número inválido"];
+
+        // Inicialização do intlTelInput
+        const iti = window.intlTelInput(input, {
+            initialCountry: "pt",
+            preferredCountries: ["pt", "br", "us", "gb"],
+            separateDialCode: true,
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+        });
+
+        // Função para resetar os estados de erro e sucesso
+        const reset = () => {
+            input.classList.remove("is-invalid");
+            input.classList.remove("is-valid");
+            errorMsg.innerText = "";
+            errorMsg.classList.add("d-none");
+            //validMsg.classList.add("d-none");
+        };
+
+        // Função para exibir erros
+        const showError = (msg) => {
+            input.classList.add("is-invalid");
+            errorMsg.innerText = msg;
+            errorMsg.classList.remove("d-none");
+        };
+
+        // Validação no envio do formulário
+        form.addEventListener("submit", function (e) {
+            reset();
+            if (input.value.trim()) {
+                if (iti.isValidNumber()) {
+                    //validMsg.classList.remove("d-none");
+                    console.log("aqui2");
+                    input.value = iti.getNumber(); // Formata o número completo com o código do país
+                } else {
+                    const errorCode = iti.getValidationError();
+                    console.log("aqui3");
+                    const msg = errorMap[errorCode] || "Número inválido";
+                    showError(msg);
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Resetar mensagens ao alterar o valor do campo
+        input.addEventListener("change", reset);
+        input.addEventListener("keyup", reset);
+    </script>
+}
+
+

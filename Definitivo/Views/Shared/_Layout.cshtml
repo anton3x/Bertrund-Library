@@ -1,0 +1,724 @@
+﻿@inject Definitivo.Models.Services.BibliotecaService bibliotecaService
+
+@{
+    Biblioteca biblioteca = bibliotecaService.GetBibliotecaInfo();
+}
+
+
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bertrund</title>
+    <link rel="icon" type="image/png" href="~/favicon.ico" sizes="32x32">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Aula03.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/jqueryui/themes/base/jquery-ui.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/@@daily-co/daily-js"></script>
+
+    <style>
+        .main-container {
+            padding: 20px;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Ensure the main content grows and takes up space */
+        .main-content {
+            flex-grow: 1;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .book-item {
+            text-align: center;
+        }
+
+        .book-item img {
+            width: 150px;
+            height: auto;
+        }
+
+        footer {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--bs-body-bg);
+        }
+
+        header {
+            background-color: var(--bs-body-bg);
+        }
+
+        /* Estilos para os links de navegação */
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+            border-radius: 6px;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Estilos para o dropdown */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            min-width: 200px;
+        }
+
+        .dropdown-item {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            padding-left: 1.5rem;
+        }
+
+        /* Animação suave para o hover */
+        .hover-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hover-effect::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background-color: var(--bs-primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .hover-effect:hover::after {
+            width: 100%;
+        }
+
+        .language-selector {
+            margin-left: 15px;
+        }
+
+        .language-selector .btn {
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .flag-icon {
+            width: 20px;
+            height: 20px;
+            object-fit: cover;
+        }
+
+        .dropdown-menu {
+            min-width: 160px;
+            padding: 8px 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .language-code {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .offcanvas {
+            max-width: 320px;
+        }
+
+        .nav-link:focus {
+            background-color: var(--bs-gray-100);
+            transform: translateX(4px);
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-section-items {
+            margin-left: -0.5rem;
+        }
+
+        .fs-5 {
+            font-size: 1.1rem !important;
+        }
+        /* Estilo para inputs */
+        .form-control {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            border: 1px solid var(--bs-border-color);
+        }
+
+            /* Estilo quando o input está em foco */
+            .form-control:focus {
+                background-color: var(--bs-tertiary-bg);
+                color: var(--bs-body-color);
+                border-color: var(--bs-primary);
+                box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+            }
+
+            /* Estilo para o placeholder */
+            .form-control::placeholder {
+                color: var(--bs-secondary-color);
+                opacity: 0.7;
+            }
+
+        /* Ajuste específico para modo escuro */
+        [data-bs-theme="dark"] .form-control {
+            background-color: var(--bs-tertiary-bg);
+            border-color: var(--bs-border-color-translucent);
+        }
+
+        [data-bs-theme="dark"] #current-language-button {
+            background-color: var(--bs-tertiary-bg);
+            border-color: var(--bs-border-color-translucent);
+            color: white;
+        }
+
+        [data-bs-theme="light"] #current-language-button {
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            color: black;
+        }
+
+        .form-select {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            border: 1px solid var(--bs-border-color);
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+            .form-select:focus {
+                border-color: var(--bs-primary);
+                box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+            }
+
+        /* Estilo para as opções do select */
+        .form-select option {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        [data-bs-theme="light"] .bg-body {
+            background-color: var(--bs-light) !important;
+        }
+
+        [data-bs-theme="dark"] .bg-body {
+            background-color: var(--bs-dark) !important;
+        }
+
+
+    </style>
+</head>
+<body class="header d-flex flex-column min-vh-100">
+    <header class="border-bottom shadow-sm ">
+        <div class="container d-flex justify-content-between align-items-center py-3">
+            <!-- Left section: Menu Button, Logo and Navigation -->
+            <div class="d-flex align-items-center gap-4">
+
+                <!-- Mobile Menu Button -->
+                <button class="btn btn-outline-secondary d-xxl-none"
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#offcanvasMenu">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <!-- Logo -->
+                <a class="navbar-brand d-flex align-items-center" onmouseover="preloadPage(this.href)" href="/">
+                    <img src="~/images/logoChillGuy.png" alt="Logo" height="40" class="me-2">
+                    <span class="h4 mb-0 text-primary fw-bold">Bertrund</span>
+                </a>
+
+                <!-- Navigation Links -->
+                <nav class="d-none d-xxl-flex align-items-center gap-3">
+                    <!-- Catálogo -->
+                    <a href="/Livros/Catalogo" onmouseover="preloadPage(this.href)" class="nav-link hover-effect">
+                        <i class="bi bi-journal-bookmark-fill me-2"></i>
+                        <span>Catálogo</span>
+                    </a>
+
+                    <!-- Menu Bibliotecário -->
+                    @if (User.IsInRole("Bibliotecario"))
+                    {
+                        <a class="nav-link  hover-effect"  onmouseover="preloadPage(this.href)" href="/Livros/GerirLivros">
+                            <i class="bi bi-book me-2"></i>
+                            <span>Livros</span>
+                        </a>
+                        <a class="nav-link hover-effect" onmouseover="preloadPage(this.href)" href="/Categorias/GerirCategorias">
+                            <i class="bi bi-tags me-2"></i>
+                            <span>Categorias</span>
+                        </a>
+                        <a class="nav-link hover-effect" onmouseover="preloadPage(this.href)" href="/Emprestimos/GerirEmprestimos">
+                            <i class="bi bi-calendar-check me-2"></i>
+                            <span>Empréstimos</span>
+                        </a>
+                        <a class="nav-link hover-effect" onmouseover="preloadPage(this.href)" href="/Autores/GerirAutores">
+                            <i class="bi bi-person-badge me-2"></i>
+                            <span>Autores</span>
+                        </a>
+                    }
+
+                    <!-- Admin Link -->
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Users/GerirUtilizadores" onmouseover="preloadPage(this.href)" class="nav-link hover-effect">
+                            <i class="bi bi-people me-2"></i>
+                            <span>Utilizadores</span>
+                        </a>
+                    }
+
+                    <!-- Leitor Link -->
+                    @if (User.IsInRole("Leitor"))
+                    {
+                        <a href="/Livros/Favoritos" onmouseover="preloadPage(this.href)" class="nav-link hover-effect">
+                            <i class="bi bi-bookmark-heart me-2"></i>
+                            <span>Favoritos</span>
+                        </a>
+                        <a href="/Perfil/Emprestimos" onmouseover="preloadPage(this.href)" class="nav-link hover-effect">
+                            <i class="bi bi-bookmark-check me-2"></i>
+                            <span>Emprestimos Ativos</span>
+                        </a>
+                        <a href="/Perfil/Reservas" onmouseover="preloadPage(this.href)" class="nav-link  hover-effect">
+                            <i class="bi bi-bookmark-star me-2"></i>
+                            <span>Reservas</span>
+                        </a>
+
+                    }
+
+                </nav>
+            </div>
+
+            <!-- Right section: Search and User Menu -->
+            <div class="d-flex align-items-center gap-3">
+                <!-- Search Form (Desktop) -->
+                <form class="d-none d-lg-block" asp-controller="Livros" asp-action="Pesquisar" method="get">
+                    <div class="input-group">
+                        <input id="searchLayoutInputDesktop"
+                               name="termo"
+                               type="search"
+                               class="form-control"
+                               placeholder="Pesquisar...">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Search Button (Mobile) -->
+                <button class="btn btn-outline-secondary d-block d-lg-none"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mobileSearch">
+                    <i class="bi bi-search"></i>
+                </button>
+
+                <!-- User Menu -->
+                <div class="dropdown">
+                    <button class="btn btn-link p-1 dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-secondary">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="px-3 py-1 text-muted">
+                                <small class="d-block">Bem-vindo,</small>
+                                <strong>@User.Identity.Name</strong>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" onmouseover="preloadPage(this.href)" href="/Home/Perfil">
+                                    <i class="bi bi-person me-2"></i>Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" onmouseover="preloadPage(this.href)" href="/Chats/">
+                                    <i class="bi bi-chat-dots me-2"></i>Mensagens
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" asp-area="Identity" asp-page="/Account/Logout">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sair
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li>
+                                <a class="dropdown-item" onmouseover="preloadPage(this.href)" asp-area="Identity" asp-page="/Account/Login">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" onmouseover="preloadPage(this.href)" asp-area="Identity" asp-page="/Account/Register">
+                                    <i class="bi bi-person-plus me-2"></i>Registo
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <!-- Adicionar Google Translate -->
+                <div class="d-none" id="google_translate_element"></div>
+
+                <button class="btn btn-outline-primary rounded-pill" id="themeToggle">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
+
+                <div class="language-selector">
+                    <div class="dropdown border-5">
+                        <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="current-language-button">
+                            <img src="/Images/flags/pt.svg" class="flag-icon" alt="Current Language" id="current-flag">
+                            <span class="language-code" id="current-language-code">PT</span>
+                        </button>
+                        <ul class="dropdown-menu border border-secondary border-1">
+                            <li>
+                                <a class="dropdown-item" onclick="setLanguage('pt')">
+                                    <img src="/Images/flags/pt.svg" class="flag-icon" alt="Português">
+                                    Português
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" onclick="setLanguage('/pt/en')">
+                                    <img src="/Images/flags/en.svg" class="flag-icon" alt="English">
+                                    Inglês
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" onclick="setLanguage('/pt/es')">
+                                    <img src="/Images/flags/es.svg" class="flag-icon" alt="Español">
+                                    Espanhol
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" onclick="setLanguage('/pt/fr')">
+                                    <img src="/Images/flags/fr.svg" class="flag-icon" alt="Français">
+                                    Francês
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+
+        <!-- Mobile Search Form -->
+        <div class="collapse" id="mobileSearch">
+            <div class="p-3 border-top">
+                <form asp-controller="Livros" asp-action="Pesquisar" method="get">
+                    <div class="input-group">
+                        <input name="termo" type="search" class="form-control" placeholder="Pesquisar..." id="searchLayoutInputMobile" />
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i> <!-- Search icon -->
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Offcanvas Mobile Menu -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasMenu" aria-labelledby="offcanvasMenuLabel">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold" id="offcanvasMenuLabel">
+                <i class="bi bi-list me-2"></i>Menu
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+
+        <div class="offcanvas-body p-0">
+            <div class="nav flex-column">
+                <!-- Public Section -->
+                <div class="nav-section p-3">
+                    <a href="/Livros/Catalogo" class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2">
+                        <i class="bi bi-journal-bookmark-fill fs-5 me-3"></i>
+                        <span class="fw-medium">Catálogo</span>
+                    </a>
+                </div>
+
+                <!-- Bibliotecario Section -->
+                @if (User.IsInRole("Bibliotecario"))
+                {
+                    <div class="nav-section border-top p-3">
+                        <div class="nav-section-title text-muted small text-uppercase px-3 mb-2">Gestão</div>
+                        <div class="nav-section-items">
+                            <a class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2" href="/Livros/GerirLivros">
+                                <i class="bi bi-book fs-5 me-3"></i>
+                                <span class="fw-medium">Livros</span>
+                            </a>
+                            <a class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2" href="/Categorias/GerirCategorias">
+                                <i class="bi bi-tags fs-5 me-3"></i>
+                                <span class="fw-medium">Categorias</span>
+                            </a>
+                            <a class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2" href="/Emprestimos/GerirEmprestimos">
+                                <i class="bi bi-calendar-check fs-5 me-3"></i>
+                                <span class="fw-medium">Empréstimos</span>
+                            </a>
+                            <a class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2" href="/Autores/GerirAutores">
+                                <i class="bi bi-person-badge fs-5 me-3"></i>
+                                <span class="fw-medium">Autores</span>
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                <!-- Admin Section -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="nav-section border-top p-3">
+                        <div class="nav-section-title text-muted small text-uppercase px-3 mb-2">Gestão</div>
+                        <a href="/Users/GerirUtilizadores" class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2">
+                            <i class="bi bi-people fs-5 me-3"></i>
+                            <span class="fw-medium">Utilizadores</span>
+                        </a>
+                    </div>
+                }
+
+                <!-- Leitor Section -->
+                @if (User.IsInRole("Leitor"))
+                {
+                    <div class="nav-section border-top p-3">
+                        <div class="nav-section-title text-muted small text-uppercase px-3 mb-2">Minha Biblioteca</div>
+                        <div class="nav-section-items">
+                            <a href="/Livros/Favoritos" class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2">
+                                <i class="bi bi-bookmark-heart fs-5 me-3"></i>
+                                <span class="fw-medium">Favoritos</span>
+                            </a>
+                            <a href="/Perfil/Emprestimos" class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2">
+                                <i class="bi bi-bookmark-check fs-5 me-3"></i>
+                                <span class="fw-medium">Emprestimos Ativos</span>
+                            </a>
+                            <a href="/Perfil/Reservas" class="nav-link d-flex align-items-center py-3 px-3 rounded-3 mb-2">
+                                <i class="bi bi-bookmark-star fs-5 me-3"></i>
+                                <span class="fw-medium">Reservas</span>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+
+    <div class="flex-grow-1 @(ViewContext.RouteData.Values["Page"]?.ToString() == "/Account/Login" || ViewContext.RouteData.Values["Page"]?.ToString() == "/Account/Register"|| ViewContext.RouteData.Values["Page"]?.ToString() == "/Account/ResendEmailConfirmation" || ViewContext.RouteData.Values["Page"]?.ToString() == "/Account/ForgotPassword"  ? "bg-body" : "")">
+        <div class="container">
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <footer class="mt-0 py-4 border-top shadow-sm">
+        <div class="container">
+            <div class="row">
+                <!-- Contact Section -->
+                <div class="col-md-4 mb-4">
+                    <h5>Contactos</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Tel:</strong> @biblioteca.Telefone</li>
+                        <li>
+                            <strong>Email: </strong>
+                            <a href="mailto:@biblioteca.Email" class="text-decoration-none">@biblioteca.Email</a>
+                        </li>
+                    </ul>
+
+                </div>
+
+                <!-- Useful Links Section -->
+                <div class="col-md-4 mb-4">
+                    <h5>Links Úteis</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/FAQ" class="text-decoration-none" onmouseover="preloadPage(this.href)">FAQ</a></li>
+                        <li><a href="/PoliticasDePrivacidade" class="text-decoration-none" onmouseover="preloadPage(this.href)">Política de Privacidade</a></li>
+                        <li><a href="/SobreNos" class="text-decoration-none" onmouseover="preloadPage(this.href)">Sobre Nós</a></li>
+                    </ul>
+                </div>
+
+                <!-- Social Media Section -->
+                <div class="col-md-4 mb-4">
+                    <h5>Siga-nos</h5>
+                    <div class="d-flex">
+                        <a href="https://www.facebook.com/bertrandlivreiros" target="_blank" class="me-4 text-decoration-none">
+                            <i class="bi bi-facebook" style="font-size: 1.5rem;"></i>
+                        </a>
+                        <a href="https://www.instagram.com/bertrandlivreiros" target="_blank" class="me-4 text-decoration-none">
+                            <i class="bi bi-instagram" style="font-size: 1.5rem;"></i>
+                        </a>
+                        <a href="https://x.com/bertrandeditora" target="_blank" class="me-4 text-decoration-none">
+                            <i class="bi bi-twitter" style="font-size: 1.5rem;"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-ajax/jquery.unobtrusive-ajax.js"></script>
+    <script src="~/lib/jqueryui/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script>
+        $("#searchLayoutInputDesktop, #searchLayoutInputMobile").autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: '@Url.Action("GetTagsLivrosAutores", "Livros")',
+                    data: { term: request.term },
+                    success: function(data) {
+                        response(data);
+                    }
+                });
+            },
+            minLength: 3 // Número mínimo de caracteres antes de buscar
+        });
+         
+
+        const themeToggle = document.getElementById('themeToggle');
+        const moonIcon = '<i class="bi bi-moon-fill"></i>';
+        const sunIcon = '<i class="bi bi-sun-fill"></i>';
+
+        // Check if the user has a saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-bs-theme', 'dark');
+            themeToggle.innerHTML = sunIcon;
+        } else {
+            document.body.setAttribute('data-bs-theme', 'light');
+            themeToggle.innerHTML = moonIcon;
+        }
+
+        // Toggle theme
+        themeToggle.addEventListener('click', () => {
+            if (document.body.getAttribute('data-bs-theme') === 'dark') {
+                document.body.setAttribute('data-bs-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = moonIcon;
+            } else {
+                document.body.setAttribute('data-bs-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = sunIcon;
+            }
+        });
+
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'pt-PT',
+                includedLanguages: 'pt-PT,en,es,fr,de,it',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+
+        function setLanguage(language) {
+            // Adicionar o novo cookie com o idioma desejado
+            document.cookie = `googtrans=${language}; path=/;`;
+            //document.cookie = `googtrans=${language}; path=/; domain=.bertrund.azurewebsites.net`;
+            
+            //var buttonCloseTranslation = document.getElementById(":2.close");
+            //if (buttonCloseTranslation != null) {
+            //    buttonCloseTranslation.click();
+            //     console.log("clicado close");
+            //}
+
+            // Recarregar a página para aplicar a tradução
+            window.location.reload();
+        }
+
+
+
+
+
+        function preloadPage(url) {
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = url;
+            document.head.appendChild(link);
+        }
+
+        //Obtem o valor do cookie associado ao google translate
+        function getCurrentLanguage() {
+            const cookies = document.cookie.split("; ");
+            const googtrans = cookies.find(cookie => cookie.startsWith("googtrans="));
+            return googtrans ? googtrans.split("=")[1] : null;
+        }
+
+        function updateCurrentLanguageDisplay() {
+            const languagePair = getCurrentLanguage();//obtem o valor do cookie associado ao google translate
+            const currentFlag = document.getElementById("current-flag"); //vamos buscar a flag la a cima
+            const currentLanguageCode = document.getElementById("current-language-code"); //vamos buscar o codigo da lingua la a cima
+
+             //se nao existir cookie quer dizer que é para aparecer em pt-pt
+            if (!languagePair) {
+                currentFlag.src = "/Images/flags/pt.svg";
+                currentFlag.alt = "Português";
+                currentLanguageCode.textContent = "PT";
+                return;
+            }
+
+            //Do cookie que contem "pt/language" extraimos apenas a language
+            const targetLanguage = languagePair.split("/")[2];
+
+            // dicionario com as flags e os codigos das linguas e bandeiras
+            const languageMap = {
+                "pt": { flag: "/Images/flags/pt.svg", code: "PT" },
+                "en": { flag: "/Images/flags/en.svg", code: "EN" },
+                "es": { flag: "/Images/flags/es.svg", code: "ES" },
+                "fr": { flag: "/Images/flags/fr.svg", code: "FR" }
+            };
+
+            // Damos update á flag e ao codigo da lingua
+            if (languageMap[targetLanguage]) {
+                currentFlag.src = languageMap[targetLanguage].flag;
+                currentFlag.alt = languageMap[targetLanguage].code;
+                currentLanguageCode.textContent = languageMap[targetLanguage].code;
+            }
+        }
+
+        // Call the function to update the header on page load
+        document.addEventListener("DOMContentLoaded", updateCurrentLanguageDisplay);
+
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

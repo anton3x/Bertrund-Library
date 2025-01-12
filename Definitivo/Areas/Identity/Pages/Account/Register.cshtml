@@ -1,0 +1,289 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Criar conta";
+}
+
+<style>
+    .register-title {
+        text-align: center;
+        font-size: 1.375rem; /* 22px */
+        margin-bottom: 24px;
+        font-weight: 500;
+        font-family: 'Roboto', Arial, sans-serif;
+        line-height: 1.75rem;
+        padding: 0;
+        width: 100%;
+    }
+
+    .register-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .register-container {
+        background-color: var(--bs-body-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        max-width: 400px;
+        width: 100%;
+        border: 1px solid var(--bs-border-color);
+    }
+
+    /* Modo claro */
+    [data-bs-theme="light"] .register-container {
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Modo escuro */
+    [data-bs-theme="dark"] .register-container {
+        background-color: #2b3035;
+        box-shadow: 0px 4px 12px rgba(255, 255, 255, 0.1);
+    }
+
+    .google-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 8px 16px;
+        background-color: white;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: 'Roboto', Arial, sans-serif;
+        font-size: 14px;
+        height: 40px;
+        margin-top: 8px;
+    }
+
+        .google-btn:hover {
+            background-color: #f8f9fa;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .google-btn img {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+
+    .or-divider {
+        text-align: center;
+        margin: 20px 0;
+        position: relative;
+    }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background-color: #dadce0;
+        }
+
+        .or-divider::before {
+            left: 0;
+        }
+
+        .or-divider::after {
+            right: 0;
+        }
+
+    .or-text {
+        background-color: var(--bs-body-bg);
+        padding: 0 16px;
+        font-size: 12px;
+        position: relative;
+        z-index: 1;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Modo escuro */
+    [data-bs-theme="dark"] .or-text {
+        background-color: #2b3035;
+    }
+
+    .register-subtitle {
+        text-align: center;
+        font-size: 0.875rem;
+        margin-bottom: 24px;
+        font-weight: 400;
+        font-family: Roboto, Arial, sans-serif;
+        line-height: 1.25rem;
+        padding: 0;
+        width: 100%;
+    }
+</style>
+
+<div class="register-page">
+    <div class="register-container my-4">
+        <h1 class="register-title">@ViewData["Title"]</h1>
+        <h5 class="register-subtitle">Associe a sua conta Google ou preencha os dados abaixo</h5>
+
+        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <button type="submit" class="google-btn" name="provider" value="Google">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=" alt="Google logo">
+                <span>Continuar com Google</span>
+            </button>
+        </form>
+
+        <div class="or-divider">
+            <span class="or-text">OU CONTINUE COM</span>
+        </div>
+
+        <form id="registerForm" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="Nome de Utilizador" />
+                <label asp-for="Input.UserName"></label>
+                <span asp-validation-for="Input.UserName" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="nome@exemplo.com" />
+                <label asp-for="Input.Email"></label>
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <!-- Campo de Senha -->
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.Password"></label>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <!-- Campo de Confirmação de Senha -->
+            <div class="form-floating mb-3">
+                <input asp-for="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Confirm password" />
+                <label asp-for="Input.ConfirmPassword"></label>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Morada" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Morada" />
+                <label asp-for="Input.Morada"></label>
+                <span asp-validation-for="Input.Morada" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="tel"
+                       asp-for="Input.PhoneNumber"
+                       id="phone"
+                       class="form-control"
+                       placeholder="Número de Telemóvel" />
+
+                <span id="valid-msg" class="d-none">✓ Valido</span>
+                <!--<label for="phoneNumber" class="form-label">Telemóvel</label>-->
+                <span class="text-danger d-none" id="error-msg"></span>
+            </div>
+
+
+
+            <!-- Seletor de Role -->
+            <div class="form-floating mb-3">
+                <select asp-for="Input.SelectedRole" class="form-control">
+                    <option value="">Selecione um cargo</option>
+                    <option value="Leitor">Leitor</option>
+                    <option value="Bibliotecario">Bibliotecário</option>
+                </select>
+                <label asp-for="Input.SelectedRole">Cargo</label>
+                <span asp-validation-for="Input.SelectedRole" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <div class="cf-turnstile" style="width: 330px;" 
+                     data-sitekey="0x4AAAAAAAze70miaTuMPi-M"
+                     data-theme="auto">
+                </div>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary mb-3">Registar</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script>
+        const input = document.querySelector("#phone");
+        const button = document.getElementById("registerSubmit");
+        const form = document.getElementById("registerForm");
+        const errorMsg = document.querySelector("#error-msg");
+        const validMsg = document.querySelector("#valid-msg");
+
+        // Mapa de mensagens de erro
+        const errorMap = ["Número inválido", "Código de país inválido", "Muito curto", "Muito longo", "Número inválido"];
+
+        // Inicialização do intlTelInput
+        const iti = window.intlTelInput(input, {
+            initialCountry: "pt",
+            preferredCountries: ["pt", "br", "us", "gb"],
+            separateDialCode: true,
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+        });
+
+        // Função para resetar os estados de erro e sucesso
+        const reset = () => {
+            input.classList.remove("is-invalid");
+            input.classList.remove("is-valid");
+            errorMsg.innerText = "";
+            errorMsg.classList.add("d-none");
+            //validMsg.classList.add("d-none");
+        };
+
+        // Função para exibir erros
+        const showError = (msg) => {
+            input.classList.add("is-invalid");
+            errorMsg.innerText = msg;
+            errorMsg.classList.remove("d-none");
+        };
+
+        // Validação no envio do formulário
+        form.addEventListener("submit", function (e) {
+            reset();
+            if (input.value.trim()) {
+                if (iti.isValidNumber()) {
+                    //validMsg.classList.remove("d-none");
+                    //console.log("aqui2");
+                    input.value = iti.getNumber(); // Formata o número completo com o código do país
+                } else {
+                    const errorCode = iti.getValidationError();
+                    //console.log("aqui3");
+                    const msg = errorMap[errorCode] || "Número inválido";
+                    showError(msg);
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Resetar mensagens ao alterar o valor do campo
+        input.addEventListener("change", reset);
+        input.addEventListener("keyup", reset);
+    </script>
+
+}
+
+<style>
+    .iti {
+        width: 100%;
+    }
+
+        /* Ajusta o campo de input dentro do intlTelInput */
+        .iti input[type="tel"] {
+            width: 100%;
+            padding-left: 60px; /* Espaço para o código do país */
+            box-sizing: border-box;
+        }
+
+    .cf-turnstile iframe {
+        width: 330px !important;
+    }
+</style>

@@ -1,0 +1,84 @@
+﻿@model Definitivo.Models.Emprestimo
+
+@{
+    ViewData["Title"] = "Adicionar Empréstimo";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">@ViewData["Title"]</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <h4 class="mb-3">Informações do Empréstimo</h4>
+
+                        <div class="mb-3">
+                            <label asp-for="DataEmprestimo" class="form-label"></label>
+                            <input asp-for="DataEmprestimo" class="form-control" />
+                            <span asp-validation-for="DataEmprestimo" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DataDevolucao" class="form-label"></label>
+                            <input asp-for="DataDevolucao" class="form-control" />
+                            <span asp-validation-for="DataDevolucao" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PerfilId" class="form-label">Leitor</label>
+                            <select asp-for="PerfilId" class="form-select" asp-items="ViewBag.PerfilId">
+                                <option value="">-- Selecione um Leitor --</option>
+                            </select>
+                            <span asp-validation-for="PerfilId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LivroId" class="form-label">Livro</label>
+                            <select asp-for="LivroId" class="form-select" asp-items="ViewBag.LivroId">
+                                <option value="">-- Selecione um Livro --</option>
+                            </select>
+                            <span asp-validation-for="LivroId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Id_bibliotecario_entregou" class="form-label">Bibliotecário que Entregou</label>
+                            <select asp-for="Id_bibliotecario_entregou" class="form-select" asp-items="ViewBag.Id_bibliotecario_entregou">
+                                <option value="">-- Selecione um Bibliotecário --</option>
+                            </select>
+                            <span asp-validation-for="Id_bibliotecario_entregou" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Id_bibliotecario_recebeu" class="form-label">Bibliotecário que Recebeu</label>
+                            <select asp-for="Id_bibliotecario_recebeu" class="form-select" asp-items="ViewBag.Id_bibliotecario_recebeu">
+                                <option value="">-- Selecione um Bibliotecário --</option>
+                            </select>
+                            <span asp-validation-for="Id_bibliotecario_recebeu" class="text-danger"></span>
+                        </div>
+
+                        <div class="mt-4 text-end">
+                            <a asp-action="GerirEmprestimos" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i>
+                                Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i>
+                                Adicionar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

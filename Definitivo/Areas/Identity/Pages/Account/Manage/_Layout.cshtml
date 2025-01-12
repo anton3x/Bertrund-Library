@@ -1,0 +1,56 @@
+﻿@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
+    {
+        Layout = parentLayout.ToString();
+    }
+    else
+    {
+        Layout = "/Areas/Identity/Pages/_Layout.cshtml";
+    }
+}
+
+<!-- Container para centralizar o conteúdo -->
+<div class="container my-5">
+    <div class="row">
+        <!-- Título principal com destaque -->
+        <!--<div class="col-4 text-center mb-4">
+            <a class="btn btn-secondary" href="/Home/Perfil">
+                <i class="bi bi-arrow-left"></i>
+                Voltar
+            </a>
+        </div>-->
+        <div class="col-12 text-center mb-4">
+            <h1 class="display-5 fw-bold">Gerir Conta</h1>
+            <p class="lead text-muted">Personalize as configurações da sua conta abaixo</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Menu de navegação lateral -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <!-- Partial para o menu de navegação -->
+                    <partial name="_ManageNav" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de conteúdo -->
+        <div class="col-md-9">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h2 class="h4 mb-4 text-secondary">Configurações da Conta</h2>
+                    <hr />
+                    <!-- Conteúdo da página gerada dinamicamente -->
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Seção de scripts adicionais -->
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

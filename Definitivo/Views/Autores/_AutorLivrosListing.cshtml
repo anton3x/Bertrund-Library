@@ -1,0 +1,53 @@
+﻿@model Definitivo.Models.AutorViewModel
+
+<div class="row g-4">
+    @foreach (var livro in Model.Livros)
+    {
+        <div class="col-md-6 animated-book">
+
+            <a href="@Url.Action("Book", "Livros", new { id = livro.ID })" class="card shadow-sm text-decoration-none">
+                <div class="card-body d-flex align-items-center">
+                    <img src="/Images/Livros/@livro.FotoNome" class="img-fluid me-3" style="width: 60px; height: 90px;" alt="Capa do livro" />
+                    <div>
+                        <h5 class="card-title">@livro.Titulo</h5>
+                        <p class="card-text text-muted">@livro.DataInsercao.Year • @livro.Categoria.Nome</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+    @if (Model.Livros != null && Model.Livros.Any())
+    {
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.PaginaAtual == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("ObrasAutores", new {autorId = Model.Autor.Id,  paginaAtual = ViewBag.PaginaAtual - 1})" tabindex="@(ViewBag.PaginaAtual == 1 ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#obrasAutorDiv"
+                       data-ajax-loading="#waitObrasAutor" data-ajax-begin="hideObrasAutor" data-ajax-complete="showObrasAutor()">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números da Página -->
+                @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("ObrasAutores", new {autorId = Model.Autor.Id, paginaAtual = i })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#obrasAutorDiv"
+                           data-ajax-loading="#waitObrasAutor" data-ajax-begin="hideObrasAutor" data-ajax-complete="showObrasAutor()">@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("ObrasAutores", new { autorId = Model.Autor.Id, paginaAtual = ViewBag.PaginaAtual + 1})" tabindex="@(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#obrasAutorDiv"
+                       data-ajax-loading="#waitObrasAutor" data-ajax-begin="hideObrasAutor" data-ajax-complete="showObrasAutor()">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

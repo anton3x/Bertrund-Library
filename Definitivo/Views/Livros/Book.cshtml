@@ -1,0 +1,533 @@
+﻿@model BookDetailsViewModel
+
+@{
+    ViewData["Title"] = "Detalhes do Livro";
+
+    // Variável para ação do formulário principal (livro)
+    var actionLivro = "";
+    if (Model.Book.Estado == "Desativado")
+    {
+        actionLivro = "";
+    }
+    else if (Model.Book.Estado == "Indisponivel" && (!Model.PrecisaIrBuscarLivro && !Model.EstaEmprestadoAEle && !Model.EstaReservadoAEle))
+    {
+        actionLivro = "ReservarLivro";
+    }
+    else if (Model.PrecisaIrBuscarLivro)
+    {
+        actionLivro = "CancelarEmprestimo";
+    }
+    else if (Model.EstaReservadoAEle)
+    {
+        actionLivro = "CancelarReserva";
+    }
+    else if (!Model.EstaEmprestadoAEle)
+    {
+        actionLivro = "PedirEmprestado";
+    }
+    else
+    {
+        actionLivro = "";
+    }
+
+    // Texto do botão principal
+    var botaoTexto = "";
+    if (Model.Book.Estado == "Desativado")
+    {
+        botaoTexto = "Desativado";
+    }
+    else if (Model.Book.Estado == "Indisponivel" && (!Model.PrecisaIrBuscarLivro && !Model.EstaEmprestadoAEle && !Model.EstaReservadoAEle))
+    {
+        botaoTexto = "Reservar";
+    }
+    else if (Model.PrecisaIrBuscarLivro)
+    {
+        botaoTexto = "Cancelar Emprestimo";
+    }
+    else if (Model.EstaReservadoAEle)
+    {
+        botaoTexto = "Cancelar Reserva";
+    }
+    else if (!Model.EstaEmprestadoAEle)
+    {
+        botaoTexto = "Fazer Emprestimo";
+    }
+    else
+    {
+        botaoTexto = "Ja se encontra Emprestado";
+    }
+
+    // Ação e estilo para o favorito
+    var actionFavorito = Model.IsInFavorites ? "RemoverFavorito" : "AdicionarFavorito";
+    var favoritoTexto = Model.IsInFavorites ? "Remover dos Favoritos" : "Adicionar aos Favoritos";
+    var favoritoClasse = Model.IsInFavorites ? "btn-danger" : "btn-outline-danger";
+    var favoritoIcon = Model.IsInFavorites ? "-fill" : "";
+
+    var ModelBotaoEmprestimo = new FormularioLivroViewModel
+    {
+        ActionLivro = actionLivro,
+        BotaoTexto = botaoTexto,
+        LivroId = Model.Book.ID
+    };
+
+    var ModelBotaoFavoritos = new FormularioLivroViewModel
+    {
+        ActionLivro = actionFavorito,
+        BotaoTexto = favoritoTexto,
+        LivroId = Model.Book.ID,
+        FavoritosClasse = favoritoClasse,
+        FavoritosIcon = favoritoIcon
+    };
+
+}
+
+<div class="container my-5">
+    <div class="toast-container position-fixed top-0 end-0 py-5 px-1" id="toastContainerShare">
+        <div id="shareToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notificação</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Link copiado para a área de transferência!
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Book Image and Desktop Actions -->
+        <div class="col-md-4 mb-sm-2">
+            <img src="/Images/Livros/@Model.Book.FotoNome" class="img-fluid rounded-lg shadow-lg" alt="@Model.Book.Titulo" width="400" />
+
+            <!-- Desktop Buttons -->
+            @if (User.IsInRole("Leitor"))
+            {
+                <div class="d-md-flex flex-column mt-4 mb-3">
+                    <!-- Formulário de Ação Principal (Livro) -->
+                    <partial name="BotaoEmprestimoLivro" model="ModelBotaoEmprestimo" />
+
+                    <!-- Formulário para Favoritar ou Remover dos Favoritos -->
+                    <partial name="BotaoFavoritosLivro" model="ModelBotaoFavoritos" />
+
+                    <!-- Botão de Compartilhar -->
+                    <button id="shareButton" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-share"></i> Compartilhar
+                    </button>
+                    <div class="card mt-2 shadow-sm d-none" id="divDisponibilidadeMobile">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-book-reader me-2"></i>Disponibilidade
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <span class="fw-bold me-2">Status:</span>
+                                        <span class="badge @(Model.Book.Estado == "Disponível" ? "bg-success" : "bg-danger")" id="estadoLivroDisponibilidadeMobile">
+                                            @Model.Book.Estado
+                                        </span>
+                                    </div>
+                                    <div class="mb-3 @(Model.Book.Estado == "Disponível" ? "d-block" : "d-none")" id="prazoEmprestimoDivMobile">
+                                        <span class="fw-bold">Prazo de Empréstimo:</span>
+                                        <span class="ms-2">@DateTime.Now.AddDays(15).ToString("dd/MM/yyyy")</span>
+                                        <small class="text-muted">(15 dias)</small>
+                                    </div>
+
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="progress mb-2" style="height: 25px;">
+                                        @{
+                                            var disponibilidadePercentualMobile = (Model.Book.NumeroExemplaresDisponiveis * 100) / Model.Book.NumeroExemplaresTotal;
+                                        }
+                                        <div class="progress-bar @(disponibilidadePercentualMobile > 50 ? "bg-success" : "bg-warning")"
+                                             role="progressbar"
+                                             style="width: @disponibilidadePercentualMobile%"
+                                             aria-valuenow="@disponibilidadePercentualMobile"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100" id="disponibilidadeExemplaresLivroMobile">
+                                            @Model.Book.NumeroExemplaresDisponiveis de @Model.Book.NumeroExemplaresTotal
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Cópias Disponíveis</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+
+        </div>
+
+        <!-- Book Information Section -->
+        <div class="col-md-8">
+            <div class="d-flex align-items-center justify-content-start">
+                <h1 class="mb-2 mt-2">@Model.Book.Titulo</h1>
+                <!--<button class="ms-4 btn btn-outline-secondary">
+                    <i class="bi-stars"></i>
+                </button>-->
+                
+            </div>
+            <p class="lead text-muted">por <a href="/Autores/Autor/@Model.Book.Autor.Id" class="text-decoration-none bold">@Model.Book.Autor.Nome</a></p>
+
+            <!-- Book Tags (Badges) -->
+            <div class="mb-4">
+                <a class="badge text-decoration-none text-white animated-badge" asp-controller="Livros" asp-action="Catalogo" asp-route-categorias="@Model.Book.Categoria.Id">@Model.Book.Categoria.Nome</a>
+            </div>
+
+            <!-- Tabs for Book Information -->
+            <ul class="nav nav-tabs" id="bookTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="sinopse-tab" data-bs-toggle="tab" data-bs-target="#sinopse" type="button" role="tab">Sinopse</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="detalhes-tab" data-bs-toggle="tab" data-bs-target="#detalhes" type="button" role="tab">Detalhes</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="autor-tab" data-bs-toggle="tab" data-bs-target="#autor" type="button" role="tab">Sobre o Autor</button>
+                </li>
+                @if (User.IsInRole("Leitor"))
+                {
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="avaliar-tab" data-bs-toggle="tab" data-bs-target="#avaliar" type="button" role="tab">Avaliar</button>
+                    </li>
+                }
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content mt-3" id="bookTabContent">
+                <!-- Sinopse Tab -->
+                <div class="tab-pane fade show active" id="sinopse" role="tabpanel">
+                    <p class="text-muted">@Model.Book.Sinopse</p>
+                </div>
+
+                <!-- Detalhes Tab -->
+                <div class="tab-pane fade" id="detalhes" role="tabpanel">
+                    <ul class="list-unstyled text-muted">
+                        <li><strong>Editora:</strong> @Model.Book.Biblioteca.Nome</li>
+                        <li><strong>Ano de Publicação:</strong> @Model.Book.AnoPublicacao</li>
+                        <li><strong>Idioma:</strong> @Model.Book.Idioma</li>
+                        <li><strong>Páginas:</strong> @Model.Book.NumeroPaginas</li>
+                        <li><strong>ISBN:</strong> @Model.Book.ISBN</li>
+                        <li><strong>Dimensões:</strong> @Model.Book.Dimensoes</li>
+                    </ul>
+                </div>
+
+                <!-- Autor Tab -->
+                <div class="tab-pane fade" id="autor" role="tabpanel">
+                    <p class="text-muted">
+                        <!--<a class="text-decoration-none fs-4" href="/Autores/Autor/@Model.Book.AutorId">@Model.Book.Autor.Nome</a>-->
+                        <p>@Model.Book.Autor.Biografia</p>
+                    </p>
+                </div>
+
+                <div class="tab-pane fade" id="avaliar" role="tabpanel">
+
+                    <!-- Formulário de Avaliação -->
+                    @if (User.IsInRole("Leitor"))
+                    {
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">Deixe a sua Avaliação</h5>
+                                <form method="post" asp-action="CreateReview" asp-controller="Livros" asp-route-BookId="@Model.Book.ID"
+                                      data-ajax="true" data-ajax-method="post" data-ajax-mode="replace"
+                                      data-ajax-update="#tabelaReviews" data-ajax-loading="#waitReviews" data-ajax-begin="hideReviewGrid()" data-ajax-complete="showReviewGrid();">
+                                    <div class="mb-3">
+                                        <label for="reviewText" class="form-label">Comentário</label>
+                                        <textarea class="form-control" id="reviewText" name="Text" rows="3" required></textarea>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <!--<label for="rating" class="form-label">Nota</label>-->
+                                        <div id="starRating" class="star-rating">
+                                            <span class="star" data-value="1"><i class="bi bi-star"></i></span>
+                                            <span class="star" data-value="2"><i class="bi bi-star"></i></span>
+                                            <span class="star" data-value="3"><i class="bi bi-star"></i></span>
+                                            <span class="star" data-value="4"><i class="bi bi-star"></i></span>
+                                            <span class="star" data-value="5"><i class="bi bi-star"></i></span>
+                                        </div>
+                                        <input type="hidden" id="rating" name="Rating" required>
+                                    </div>
+                                    <input type="hidden" name="sortOrder" value="@Model.SortOrder" />
+
+                                    <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <form asp-action="Review" method="get" id="orderReviewsForm" class="mb-3 d-flex align-content-center justify-content-between"
+                              data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tabelaReviews"
+                              data-ajax-loading="#waitReviews" data-ajax-begin="hideReviewGrid()" data-ajax-complete="showReviewGrid()">
+                            <h4 class="mb-0">
+                                Avaliações dos Leitores
+                            </h4>
+                            <input type="hidden" name="bookId" value="@Model.Book.ID" />
+
+                            <select id="sortOrderSelect" name="sortOrder" class="form-select w-auto" onchange="$('#btnSelectOrderSubmit').click();">
+                                <option value="date-desc" selected="@(Model.SortOrder == "date-desc")">Mais Recentes</option>
+                                <option value="date-asc" selected="@(Model.SortOrder == "date-asc")">Mais Antigas</option>
+                                <option value="stars-desc" selected="@(Model.SortOrder == "stars-desc")">Melhor Avaliadas</option>
+                                <option value="stars-asc" selected="@(Model.SortOrder == "stars-asc")">Pior Avaliadas</option>
+                            </select>
+
+
+                            <button type="submit" class="d-none" id="btnSelectOrderSubmit"></button>
+                        </form>
+
+                        <div id="waitReviews" style="display:none" class="justify-content-center">
+                            <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+                            <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+                        </div>
+
+                        <partial name="ReviewsGrid" model="Model" />
+                    }
+                </div>
+
+            </div>
+            @if (User.IsInRole("Leitor"))
+            {
+                <div class="card mt-5 shadow-sm" id="divDisponibilidade">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-book-reader me-2"></i>Disponibilidade
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="fw-bold me-2">Status:</span>
+                                    <span class="badge @(Model.Book.Estado == "Disponível" ? "bg-success" : "bg-danger")" id="estadoLivroDisponibilidade">
+                                        @Model.Book.Estado
+                                    </span>
+                                </div>
+                                <div class="mb-3 @(Model.Book.Estado == "Disponível" ? "d-block" : "d-none")" id="prazoEmprestimoDiv">
+                                    <span class="fw-bold">Prazo de Empréstimo:</span>
+                                    <span class="ms-2">@DateTime.Now.AddDays(15).ToString("dd/MM/yyyy")</span>
+                                    <small class="text-muted">(15 dias)</small>
+                                </div>
+                                
+                            </div>
+                            <div class="col-md-6">
+                                <div class="progress mb-2" style="height: 25px;">
+                                    @{
+                                        var disponibilidadePercentual = (Model.Book.NumeroExemplaresDisponiveis * 100) / Model.Book.NumeroExemplaresTotal;
+                                    }
+                                    <div class="progress-bar @(disponibilidadePercentual > 50 ? "bg-success" : "bg-warning")"
+                                         role="progressbar"
+                                         style="width: @disponibilidadePercentual%"
+                                         aria-valuenow="@disponibilidadePercentual"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100" id="disponibilidadeExemplaresLivro">
+                                        @Model.Book.NumeroExemplaresDisponiveis de @Model.Book.NumeroExemplaresTotal
+                                    </div>
+                                </div>
+                                <small class="text-muted">Cópias Disponíveis</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+
+        </div>
+        
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+
+        document.getElementById('avaliar-tab').addEventListener('click', function () {
+            // Esconde 'divDisponibilidade'
+            document.getElementById('divDisponibilidade').classList.add('d-none');
+            // Mostra 'divDisponibilidadeMobile'
+            document.getElementById('divDisponibilidadeMobile').classList.remove('d-none');
+        });
+
+        document.getElementById('detalhes-tab').addEventListener('click', function () {
+            // Esconde 'divDisponibilidade'
+            document.getElementById('divDisponibilidade').classList.remove('d-none');
+            // Mostra 'divDisponibilidadeMobile'
+            document.getElementById('divDisponibilidadeMobile').classList.add('d-none');
+        });
+        document.getElementById('autor-tab').addEventListener('click', function () {
+            // Esconde 'divDisponibilidade'
+            document.getElementById('divDisponibilidade').classList.remove('d-none');
+            // Mostra 'divDisponibilidadeMobile'
+            document.getElementById('divDisponibilidadeMobile').classList.add('d-none');
+        });
+        document.getElementById('sinopse-tab').addEventListener('click', function () {
+            // Esconde 'divDisponibilidade'
+            document.getElementById('divDisponibilidade').classList.remove('d-none');
+            // Mostra 'divDisponibilidadeMobile'
+            document.getElementById('divDisponibilidadeMobile').classList.add('d-none');
+        });
+
+        function hideReviewGrid() {
+            // Oculta a div que contém a grid de livros
+            document.getElementById('tabelaReviews').style.display = 'none';
+            document.getElementById('waitReviews').classList.remove('d-none'); // Add the d-flex class
+            document.getElementById('waitReviews').classList.add('d-flex'); // Add the d-flex class
+            document.getElementById('waitReviews').style.display = 'block'; // Ensure it's visible
+            document.getElementById('reviewText').value = ""; // Clean
+
+            const stars = document.querySelectorAll('.star');
+
+            stars.forEach(star => {
+                if (parseInt(star.getAttribute('data-value')) <= 0) {
+                    star.innerHTML = '<i class="bi bi-star-fill"></i>';
+                } else {
+                    star.innerHTML = '<i class="bi bi-star"></i>';
+                }
+            });
+            
+        }
+
+        function showReviewGrid() {
+            // Exibe novamente a div que contém a grid de livros
+            document.getElementById('tabelaReviews').style.display = 'block';
+            document.getElementById('waitReviews').classList.remove('d-flex'); // Remove the d-flex class
+            document.getElementById('waitReviews').classList.add('d-none'); // Add the d-flex class
+            document.getElementById('waitReviews').style.display = 'none'; // Hide the element
+        }
+
+        function atualizarValoresGerirEmprestimos(id) {
+            $.ajax({
+                url: '/Livros/ObterValoresDisponibilidadeLivro',
+                type: 'GET',
+                dataType: 'json',
+                cache: false,
+                data: { livroId: id }, // Passa o ID do livro
+                success: function (data) {
+                    //console.log('Dados recebidos:', data);
+
+                    if (Array.isArray(data)) {
+                        $('#estadoLivroDisponibilidade').text(data[0]);
+                        $('#estadoLivroDisponibilidadeMobile').text(data[0]);
+
+                        if (data[0] == "Disponível") {
+                            $('#estadoLivroDisponibilidade').removeClass("bg-danger").addClass("bg-success");
+                            $('#prazoEmprestimoDiv').removeClass("d-none").addClass("d-block");
+                            $('#estadoLivroDisponibilidadeMobile').removeClass("bg-danger").addClass("bg-success");
+                            $('#prazoEmprestimoDivMobile').removeClass("d-none").addClass("d-block");
+
+                        } else {
+                            $('#estadoLivroDisponibilidade').removeClass("bg-success").addClass("bg-danger");
+                            $('#prazoEmprestimoDiv').removeClass("d-block").addClass("d-none");
+                            $('#estadoLivroDisponibilidadeMobile').removeClass("bg-success").addClass("bg-danger");
+                            $('#prazoEmprestimoDivMobile').removeClass("d-block").addClass("d-none");
+                        }
+                        $('#disponibilidadeExemplaresLivro').text(data[1]);
+                        $('#disponibilidadeExemplaresLivro').css('width', data[2] + '%');
+                        $('#disponibilidadeExemplaresLivro').attr('aria-valuenow', data[2]);
+                        $('#disponibilidadeExemplaresLivroMobile').text(data[1]);
+                        $('#disponibilidadeExemplaresLivroMobile').css('width', data[2] + '%');
+                        $('#disponibilidadeExemplaresLivroMobile').attr('aria-valuenow', data[2]);
+                        $('#disponibilidadePercentualMobile').val(data[2]);
+                        $('#disponibilidadePercentual').val(data[2]);
+                        if (parseFloat(data[2]) > 50) {
+                            $('#disponibilidadeExemplaresLivroMobile').removeClass("bg-warning").addClass("bg-success");
+                            $('#disponibilidadeExemplaresLivro').removeClass("bg-warning").addClass("bg-success");
+
+                        } else {
+                            $('#disponibilidadeExemplaresLivroMobile').removeClass("bg-success").addClass("bg-warning");
+                            $('#disponibilidadeExemplaresLivro').removeClass("bg-success").addClass("bg-warning");
+                        }
+
+                    } else {
+                        //console.error('Dados recebidos não são um array:', data);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Status:', status);
+                    console.error('Erro:', error);
+                    console.error('Resposta:', xhr.responseText);
+                }
+            });
+        }
+
+        function shareBook() {
+            navigator.clipboard.writeText(window.location.href).then(function () {
+                var toast = new bootstrap.Toast(document.getElementById('shareToast'));
+                toast.show();
+
+                document.getElementById('toastContainerShare').style.display = 'block';
+                document.getElementById('toastContainer2').style.display = 'none';
+                document.getElementById('toastContainer1').style.display = 'none';
+            }).catch(function (err) {
+                console.error('Erro ao copiar texto: ', err);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const shareButton = document.getElementById('shareButton');
+
+            if (shareButton) {
+                shareButton.addEventListener('click', shareBook);
+            }
+
+            const stars = document.querySelectorAll('.star');
+            const ratingInput = document.getElementById('rating');
+
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const value = star.getAttribute('data-value');
+                    ratingInput.value = value;
+                    highlightStars(value);
+                });
+            });
+
+            function highlightStars(value) {
+                stars.forEach(star => {
+                    if (parseInt(star.getAttribute('data-value')) <= value) {
+                        star.innerHTML = '<i class="bi bi-star-fill"></i>';
+                    } else {
+                        star.innerHTML = '<i class="bi bi-star"></i>';
+                    }
+                });
+            }
+        });
+
+        //document.getElementById('shareButton').addEventListener('click', shareBook);
+
+    </script>
+}
+
+<style>
+    .animated-badge {
+        background-color: rgb(0, 123, 255); /* Azul  */
+    }
+
+        
+        .animated-badge:hover {
+            background-color: rgb(51, 153, 255); /* Azul mais claro */
+            cursor: pointer;
+        }
+
+        .animated-badge:active {
+            background-color: rgb(0, 92, 191); /* Azul mais escuro */
+            transform: scale(0.95); /* encolhimento ao clicar */
+        }
+    /* Ajuste para que os toasts fiquem empilhados */
+    .toast-container {
+        z-index: 1050; /* Torna a toast-container visível acima de outros elementos */
+    }
+
+    .toast {
+        margin-top: 10px; /* Espaçamento entre os toasts */
+    }
+
+    .star-rating {
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    .star {
+        color: #f5b301;
+        transition: color 0.2s;
+    }
+
+</style>

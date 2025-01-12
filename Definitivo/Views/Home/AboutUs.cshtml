@@ -1,0 +1,516 @@
+﻿@model SobreNosModel
+
+@if (User.IsInRole("Admin"))
+{
+    <form id="editForm" enctype="multipart/form-data" method="post">
+        <div class="container my-5">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="display-4 mb-4">Sobre a Nossa Biblioteca</h1>
+                <button id="editButton" type="button" class="btn btn-primary">
+                    <i class="bi bi-pencil-square"></i> Editar
+                </button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="d-flex card-header justify-content-between">
+                    <h2 class="h5">Nosso Objetivo</h2>
+                    <button id="addBulletPointButton" type="button" class="btn btn-outline-secondary d-none">
+                        <i class="bi bi-plus-circle"></i> Bullet Point
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="mb-4" data-editable="true" data-type="textarea" data-key="paragrafoInicial">@Model.ObjetivoBiblioteca.paragrafoInicial</p>
+                            <ul class="list-unstyled" id="bulletPointsList">
+                                @{
+                                    int bulletpoint = 0;
+                                    var bulletPoints = String.IsNullOrEmpty(Model.ObjetivoBiblioteca?.bulletPoints)
+	                                    ? Array.Empty<string>() // Retorna um array vazio se não houver conteúdo
+	                                    : Model.ObjetivoBiblioteca.bulletPoints.Split(';');
+                                }
+                                @if (bulletPoints.Length > 1 || (bulletPoints.Length == 1 && !String.IsNullOrWhiteSpace(bulletPoints[0])))
+                                {
+	                                @for (int i = 0; i < bulletPoints.Length; i++)
+	                                {
+		                                <li data-editable="true" data-type="textarea" data-key="bulletPointObjetivo[@(bulletpoint++)]"><i class="bi bi-check-lg"></i> @bulletPoints[i]</li>
+	                                }
+                                }
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <img id="libraryImage" src="/Images/library.webp" class="img-fluid rounded shadow-lg" alt="Exterior da biblioteca" />
+                            <!--<input type="file" class="form-control mt-2 d-none" name="libraryImage" id="libraryImageInput" />-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5">Nossa História</h2>
+                </div>
+                <div class="card-body">
+                    <p data-editable="true" data-type="textarea" data-key="historia">@Model.Historia</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="d-flex card-header justify-content-between">
+                    <h2 class="h5">Nossa Equipa</h2>
+                    <button id="addTeamMember" type="button" class="btn btn-outline-secondary d-none">
+                        <i class="bi bi-plus-circle"></i> Membro da Equipa
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center" id="teamMembersList">
+                        @for (var i = 0; i < Model.MembrosEquipa.Count; i++)
+                        {
+                            <div class="col-lg-3 col-md-6 mb-4 mt-2">
+                                <div class="card h-100 position-relative">
+                                    <div class="card-img-top rounded-circle mx-auto d-block mt-3" style="width: 100px;">
+                                        <img src="/Images/Funcionarios/@Model.MembrosEquipa[i].FotoNome" alt="@Model.MembrosEquipa[i].Nome" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;" />
+                                        <input type="file" name="Membros[@Model.MembrosEquipa[i].Id].Foto" id="Membros[@Model.MembrosEquipa[i].Id].Foto" accept="image/*" class="d-none"/>
+                                        <label for="Membros[@Model.MembrosEquipa[i].Id].Foto"
+                                               class="d-none labelToFileInput btn btn-sm btn-primary rounded-circle mt-1" data-key="Membros[@Model.MembrosEquipa[i].Id].FotoNome">
+                                            <i class="bi bi-upload"></i>
+                                        </label>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title" data-editable="true" data-key="Membros[@Model.MembrosEquipa[i].Id].Nome">@Model.MembrosEquipa[i].Nome</h5>
+                                        <p class="card-text" data-editable="true" data-key="Membros[@Model.MembrosEquipa[i].Id].Cargo">@Model.MembrosEquipa[i].Cargo</p>
+                                        <p data-editable="true" data-key="Membros[@Model.MembrosEquipa[i].Id].Descricao">@Model.MembrosEquipa[i].Descricao</p>
+                                    </div>
+                                    <button id="removeMembrosCardButton[@Model.MembrosEquipa[i].Id]" type="button" class="btn btn-outline-danger position-absolute d-none" style="top: 10px; right: 10px;" onclick="removerMembro(this,@Model.MembrosEquipa[i].Id, false)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="d-flex card-header justify-content-between">
+                    <h2 class="h5">Localização e Contactos</h2>
+                    <button id="addHoraDiaHorario" type="button" class="btn btn-outline-secondary d-none">
+                        <i class="bi bi-plus-circle"></i> Hora e Dia
+                    </button>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="location-tab" data-bs-toggle="tab" href="#location" role="tab">Localização</a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="hours-tab" data-bs-toggle="tab" href="#hours" role="tab">Horário de Funcionamento</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3" id="myTabContent">
+                        <div class="tab-pane fade show active" id="location" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">Visite-nos</h5>
+                                    <p data-editable="true" data-key="Biblioteca.Morada">@Model.Biblioteca.Morada</p>
+                                    <p data-editable="true" data-key="Biblioteca.CodigoPostal">@Model.Biblioteca.CodigoPostal</p>
+                                    <p data-editable="true" data-key="Biblioteca.Cidade">@Model.Biblioteca.Cidade</p>
+                                    <p><strong>Contacte-nos:</strong></p>
+                                    <div class="d-flex flex-column mb-2">
+                                        <div class="d-flex align-items-start">
+                                            <span class="me-1">Tel: </span>
+                                            <p data-editable="true" data-key="Biblioteca.Telefone" class="mb-0 w-100">
+                                                @Model.Biblioteca.Telefone
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-column">
+                                        <div class="d-flex align-items-start">
+                                            <span class="me-1">Email: </span>
+                                            <p data-editable="true" data-key="Biblioteca.Email" class="mb-0 w-100">
+                                                @Model.Biblioteca.Email
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="ratio ratio-16x9">
+                                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2998.05808479938!2d-7.740566899999999!3d41.28584029999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd3b4ba0b46aaaab%3A0xe80064281b449ca2!2sBiblioteca%20Central%20da%20Universidade%20de%20Tr%C3%A1s-Os-Montes%20e%20Alto%20Douro!5e0!3m2!1spt-PT!2spt!4v1728921052774!5m2!1spt-PT!2spt" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="hours" role="tabpanel">
+                            <h5 class="mb-3">Horário de Funcionamento</h5>
+                            <table class="table" id="horarioFuncionamentoTable">
+                                @for (var i = 0; i < Model.HorasFucionamento.Count; i++)
+                                {
+                                    <tr>
+                                        <td data-editable="true" data-key="HorasFucionamento[@Model.HorasFucionamento[i].Id].Dia">@Model.HorasFucionamento[i].Dia</td>
+                                        <td data-editable="true" data-key="HorasFucionamento[@Model.HorasFucionamento[i].Id].Hora">@Model.HorasFucionamento[i].Hora</td>
+                                        <td class="text-center align-middle" style="width: 20px">
+                                            <button type="button" class="btn btn-outline-danger d-none" onclick="removerLinhaHorario(this, @Model.HorasFucionamento[i].Id, false)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </table>
+                            <p class="text-muted">Nota: Estamos fechados nos feriados nacionais...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+    <script>
+        function removerLinhaHorario(button, id, isNewHorario) {
+            if (isNewHorario) {
+                // Para novos elementos, remova apenas localmente
+                button.closest('tr').remove();
+            } else {
+                // Para elementos existentes, faça a requisição ao servidor
+                fetch(`/Home/RemoverHorario/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            // Remove a linha da tabela se a requisição for bem-sucedida
+                            button.closest('tr').remove();
+                        } else {
+                            alert('Erro ao remover o horário. Tente novamente.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        alert('Erro ao remover o horário.');
+                    });
+            }
+        }
+
+        function removerMembro(button, id, isNewMember) {
+            if (!isNewMember) {
+                fetch(`/Home/RemoverMembro/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Remove o cartão se a requisição for bem-sucedida
+                        button.closest('.col-lg-3, .col-md-6').remove();
+                    } else {
+                        alert('Erro ao remover o membro. Tente novamente.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao remover o membro.');
+                });
+            }
+            button.closest('.col-lg-3, .col-md-6').remove();
+        }
+
+        document.getElementById('addHoraDiaHorario').addEventListener('click', function () {
+            let horarioTable = document.getElementById('horarioFuncionamentoTable').querySelector('tbody');
+
+            // Se o tbody não existir, cria um novo e adiciona à tabela
+            if (!horarioTable) {
+                horarioTable = document.createElement('tbody');
+                document.getElementById('horarioFuncionamentoTable').appendChild(horarioTable);
+            }
+
+            const newId = `new_${Date.now()}`; // Gera um ID único para o novo horário
+
+            const newRowHtml = `
+                    <tr>
+                        <td data-editable="true" data-key="HorasFucionamentoNew[${newId}].Dia">
+                            <textarea rows="2" class="form-control" placeholder="Dia da Semana"></textarea>
+                        </td>
+                        <td data-editable="true" data-key="HorasFucionamentoNew[${newId}].Hora">
+                            <textarea class="form-control" rows="2" placeholder="Hora (ex: 08h00 - 18h00)"></textarea>
+                        </td>
+                        <td class="text-center align-middle" style="width: 20px">
+                                <button type="button" class="btn btn-outline-danger" onclick="removerLinhaHorario(this, '${newId}', true)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+            // Adiciona a nova linha à tabela
+            horarioTable.insertAdjacentHTML('beforeend', newRowHtml);
+        });
+
+        document.getElementById('addTeamMember').addEventListener('click', function () {
+            const teamMembersList = document.getElementById('teamMembersList');
+            const memberId = `NEW_${Date.now()}`; // Gera um ID único para o novo membro
+
+            const newMemberHtml = `
+                <div class="col-lg-3 col-md-6 mb-4 mt-2">
+                    <div class="card h-100 position-relative">
+                        <div class="card-img-top rounded-circle mx-auto d-block mt-3" style="width: 100px;">
+                            <img src="/Images/Funcionarios/userDefault.png" alt="Novo Membro" class="img-fluid rounded-circle" />
+                                                            <input type="file" name="MembrosNew[${memberId}].Foto" id="MembrosNew[${memberId}].Foto" accept="image/*" class="d-none"/>
+                                                    <label for="MembrosNew[${memberId}].Foto"
+                                                                    class="labelToFileInput btn btn-sm btn-primary rounded-circle mt-1" data-key="MembrosNew[${memberId}].Foto">
+                                        <i class="bi bi-upload"></i>
+                                    </label>
+                        </div>
+                        <div class="card-body">
+                                    <h5 class="card-title" data-editable="true" data-key="MembrosNew[${memberId}].Nome">
+                                    <input type="text" class="form-control" placeholder="Nome do Membro" />
+                                </h5>
+                                    <p class="card-text" data-editable="true" data-key="MembrosNew[${memberId}].Cargo">
+                                <input type="text" class="form-control" placeholder="Cargo do Membro" />
+                            </p>
+                                    <p data-editable="true" data-key="MembrosNew[${memberId}].Descricao">
+                                <textarea class="form-control" rows="3" placeholder="Descrição do Membro"></textarea>
+                            </p>
+                        </div>
+                                    <button type="button" class="btn btn-outline-danger position-absolute" style="top: 10px; right: 10px;" onclick="removerMembro(this,'${memberId}', true)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                `;
+
+            // Adiciona o novo membro à lista de membros da equipa
+            teamMembersList.insertAdjacentHTML('beforeend', newMemberHtml);
+        });
+
+        document.getElementById('editButton').addEventListener('click', function () {
+            const isEditing = this.classList.contains('editing');
+            this.textContent = isEditing ? 'Editar' : 'Guardar';
+            this.classList.toggle('editing');
+
+            const editableElements = document.querySelectorAll('[data-editable]');
+            const fileInputs = document.querySelectorAll('.labelToFileInput');
+            const removeButtons = document.querySelectorAll('.btn-outline-danger');
+            const addButtons = document.querySelectorAll('.btn-outline-secondary');
+
+            if (isEditing) {
+                // Saindo do modo de edição (Salvando)
+                const formData = new FormData(document.getElementById('editForm'));
+
+                editableElements.forEach(el => {
+                    const key = el.getAttribute('data-key');
+                    const input = el.querySelector('textarea, input');
+                    if (input) {
+                        el.textContent = input.value;
+                        formData.append(key, input.value);
+                    }
+                });
+
+                console.log(formData);
+
+                // Enviar dados e imagens ao servidor
+                fetch('/Home/GuardarAlteracoesAboutUs', {
+                    method: 'POST',
+                    body: formData,
+                }).then(response => {
+                    if (response.ok) {
+                        //alert('Alterações salvas com sucesso!');
+                        window.location.reload();
+                    } else {
+                        alert('Erro ao salvar alterações.');
+                    }
+                });
+
+                // Esconder inputs de arquivo novamente
+                fileInputs.forEach(fileInput => {
+                    fileInput.classList.add('d-none');
+                });
+                // Esconder botões de remoção e adição
+                removeButtons.forEach(button => button.classList.add('d-none'));
+                addButtons.forEach(button => button.classList.add('d-none'));
+            } else {
+                // Entrando no modo de edição
+                editableElements.forEach(el => {
+                    const value = el.textContent.trim();
+                    const key = el.getAttribute('data-key');
+
+                    // Verifica se o data-key está no formato "Membros[NUMBER].Descricao"
+                    const isMemberDescription = /^Membros\[\d+\]\.Descricao$/.test(key);
+                    const isMemberNome = /^Membros\[\d+\]\.Nome$/.test(key);
+                    const isMemberCargo = /^Membros\[\d+\]\.Cargo$/.test(key);
+                    const isBulletPoint = /^bulletPointObjetivo\[\d+\]$/.test(key);
+                    
+                    const paragrafoInicial = key == "paragrafoInicial";
+
+                    // Define o número de linhas com base na condição
+                    const rows = isMemberDescription || paragrafoInicial ? 5 : 2;
+
+                    let placeholder = '';
+
+                    // Definindo placeholders com base na chave
+                    if (key === 'Biblioteca.Morada') placeholder = 'Digite a morada';
+                    else if (key === 'Biblioteca.CodigoPostal') placeholder = 'Digite o código postal';
+                    else if (key === 'Biblioteca.Cidade') placeholder = 'Digite a cidade';
+                    else if (key === 'Biblioteca.Telefone') placeholder = 'Digite o telefone';
+                    else if (key === 'Biblioteca.Email') placeholder = 'Digite o email';
+                    else if (key === 'historia') placeholder = 'Digite a história da biblioteca';
+                    else if (key === 'paragrafoInicial') placeholder = 'Digite o objetivo da biblioteca';
+                    else if (isMemberDescription) placeholder = 'Digite a descrição do funcionário';
+                    else if (isMemberNome) placeholder = 'Digite o nome do funcionário';
+                    else if (isMemberCargo) placeholder = 'Digite o cargo do funcionário';
+                    else if (isBulletPoint) placeholder = 'Adicione um bullet point';
+
+                    el.innerHTML = `<textarea class="form-control" rows="${rows}" placeholder="${placeholder}">${value}</textarea>`;
+                });
+
+                // Mostrar inputs de arquivo
+                fileInputs.forEach(fileInput => {
+                    fileInput.classList.remove('d-none');
+                });
+                // Mostrar botões de remoção e adição
+                removeButtons.forEach(button => button.classList.remove('d-none'));
+                addButtons.forEach(button => button.classList.remove('d-none'));
+            }
+        });
+        document.getElementById('addBulletPointButton').addEventListener('click', function () {
+            const bulletPointsList = document.getElementById('bulletPointsList');
+            const bulletpointCount = bulletPointsList.querySelectorAll('li').length;
+
+            // Cria um novo item de lista com textarea para edição
+            const newBulletPoint = document.createElement('li');
+            newBulletPoint.setAttribute('data-editable', 'true');
+            newBulletPoint.setAttribute('data-type', 'textarea');
+            newBulletPoint.setAttribute('data-key', `bulletPointObjetivoNew[${bulletpointCount}]`);
+            newBulletPoint.innerHTML = `
+                    <textarea class="form-control" rows="2" placeholder="Novo Bullet Point"></textarea>
+                `;
+
+            // Adiciona o novo bullet point à lista
+            bulletPointsList.appendChild(newBulletPoint);
+        });
+    </script>
+}
+else
+{
+    ﻿<div class="container my-5">
+        <div class="d-flex justify-content-center align-items-center">
+            <h1 class="display-4 mb-4">Sobre a Nossa Biblioteca</h1>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5">Nosso Objetivo</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p class="mb-4">@Model.ObjetivoBiblioteca.paragrafoInicial</p>
+                        <ul class="list-unstyled">
+                            @{
+                                int bulletpoint = 0;
+                                var bulletPoints = Model.ObjetivoBiblioteca.bulletPoints != null
+                                ? Model.ObjetivoBiblioteca.bulletPoints.Split(';')
+                                : new string[0];
+                            }
+
+                            @for (int i = 0; i < bulletPoints.Length; i++)
+                            {
+                                <li><i class="bi bi-check-lg"></i> @bulletPoints[i]</li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <img src="/Images/library.webp" class="img-fluid rounded shadow-lg" alt="Exterior da biblioteca" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5">Nossa História</h2>
+            </div>
+            <div class="card-body">
+                <p>@Model.Historia</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5">Nossa Equipa</h2>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    @for (var i = 0; i < Model.MembrosEquipa.Count; i++)
+                    {
+                        <div class="col-lg-3 col-md-6 mb-4 mt-2">
+                            <div class="card h-100">
+                                <div class="card-img-top rounded-circle mx-auto d-block mt-3" style="width: 100px;">
+                                    <img src="/Images/Funcionarios/@Model.MembrosEquipa[i].FotoNome" alt="@Model.MembrosEquipa[i].Nome" class="img-fluid rounded-circle" />
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">@Model.MembrosEquipa[i].Nome</h5>
+                                    <p class="card-text">@Model.MembrosEquipa[i].Cargo</p>
+                                    <p>@Model.MembrosEquipa[i].Descricao</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h5">Localização e Contactos</h2>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="location-tab" data-bs-toggle="tab" href="#location" role="tab">Localização</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="hours-tab" data-bs-toggle="tab" href="#hours" role="tab">Horário de Funcionamento</a>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3" id="myTabContent">
+                    <div class="tab-pane fade show active" id="location" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Visite-nos</h5>
+                                <p>@Model.Biblioteca.Morada</p>
+                                <p>@Model.Biblioteca.CodigoPostal</p>
+                                <p>@Model.Biblioteca.Cidade</p>
+                                <p><strong>Contacte-nos:</strong></p>
+                                <p>Tel: @Model.Biblioteca.Telefone</p>
+                                <p>Email: @Model.Biblioteca.Email</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2998.05808479938!2d-7.740566899999999!3d41.28584029999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd3b4ba0b46aaaab%3A0xe80064281b449ca2!2sBiblioteca%20Central%20da%20Universidade%20de%20Tr%C3%A1s-Os-Montes%20e%20Alto%20Douro!5e0!3m2!1spt-PT!2spt!4v1728921052774!5m2!1spt-PT!2spt" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hours" role="tabpanel">
+                        <h5 class="mb-3">Horário de Funcionamento</h5>
+                        <table class="table">
+                            @for (var i = 0; i < Model.HorasFucionamento.Count; i++)
+                            {
+                                <tr>
+                                    <td>@Model.HorasFucionamento[i].Dia</td>
+                                    <td>@Model.HorasFucionamento[i].Hora</td>
+                                </tr>
+                            }
+                        </table>
+                        <p class="text-muted">Nota: Estamos fechados nos feriados nacionais...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}

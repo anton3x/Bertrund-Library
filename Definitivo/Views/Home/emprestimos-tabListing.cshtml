@@ -1,0 +1,217 @@
+﻿@model Definitivo.Models.Perfil
+
+<!--Loading -->
+<div id="waitEmprestimos" style="display:none" class="justify-content-center">
+    <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+    <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+</div>
+
+
+<div id="TabelaEmprestimos">
+    @if (ViewData["MessageEmprestimosPerfil"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+            @if (ViewData["MessageEmprestimosPerfil"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast1" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageEmprestimosPerfil"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["MessageEmprestimosPerfil"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast1" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageEmprestimosPerfil"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var successToast = document.getElementById('successToast1');
+            var errorToast = document.getElementById('errorToast1');
+
+            // Exibe o Toast de Sucesso se ele estiver presente
+            if (successToast) {
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            // Exibe o Toast de Erro se ele estiver presente
+            if (errorToast) {
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+            }
+            // Função para exibir os Toasts
+            function showNotificationsEmprestimosPerfil() {
+                var successToast = document.getElementById('successToast1');
+                var errorToast = document.getElementById('errorToast1');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                }
+            }
+
+        </script>
+
+    }
+    @if (Model.Emprestimos != null && Model.Emprestimos.Any(e => e.DataDevolucao == null))
+    {
+        @foreach (var emprestimo in Model.Emprestimos.Where(e => e.DataDevolucao == null))
+        {
+            <div class="d-flex justify-content-between align-items-center mb-5" id="book-@emprestimo.Id">
+                <div>
+                    <h5>@emprestimo.Livro.Titulo</h5>
+                    <p class="text-muted">@emprestimo.Livro.Autor.Nome</p>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock me-2"></i>
+                        @if (emprestimo.DataDevolucao == null && emprestimo.DataPrevista != null) //ta entregue
+                        {
+                            <span>Data limite de Devolução: @emprestimo.DataPrevista?.ToString("dd/MM/yyyy hh:mm")</span>
+                        }
+                        else if (emprestimo.DataDevolucao == null && emprestimo.DataPrevista == null) //nao ta entregue
+                        {
+                            <span>Data limite de Entrega: @emprestimo.DataEmprestimo.AddDays(3).ToString("dd/MM/yyyy hh:mm")</span>
+                        }
+                    </div>
+                </div>
+                <div class="d-flex flex-column align-items-end">
+                    @if (emprestimo.DataPrevista != null && emprestimo.DataDevolucao == null)
+                    {
+                        <span class="badge @(emprestimo.DataPrevista >= DateTime.Now ? "bg-success" : "bg-danger")">
+                            @(emprestimo.DataPrevista >= DateTime.Now ? "Em dia" : "Atrasado")
+                        </span>
+                    }
+
+
+                    @if (emprestimo.DataDevolucao == null && emprestimo.Id_bibliotecario_entregou == null)
+                    {
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#returnBookModal-@emprestimo.Id">
+                            <i class="bi bi-arrow-repeat me-2"></i> Cancelar
+                        </button>
+                    }
+
+
+
+                    <!-- Modal Structure -->
+                    <div class="modal fade" id="returnBookModal-@emprestimo.Id" tabindex="-1" aria-labelledby="returnBookLabel-@emprestimo.Id" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="returnBookLabel-@emprestimo.Id">Cancelar Empréstimo</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Está prestes a cancelar o empréstimo do livro "O Colar". Tem a certeza de que deseja prosseguir?
+                                    <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-arrow-left"></i>
+                                            Voltar
+                                    </button>
+
+                                    <form asp-action="CancelarEmprestimo" asp-controller="Livros" method="get"
+                                          data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaEmprestimos"
+                                          data-ajax-loading="#waitEmprestimos" data-ajax-begin="hideBookGridEmprestimos();closeModalEmprestimos();" data-ajax-complete="showBookGridEmprestimos()">
+                                        <input type="hidden" name="inBookPage" value="false" />
+                                        <input type="hidden" name="livroId" value="@emprestimo.Livro.ID" />
+                                        <button type="submit" class="btn btn-danger">
+                                            Cancelar
+
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.CurrentPageEmprestimosAtivos == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Perfil", new { sectionActivated = "emprestimos-tab", page = ViewBag.CurrentPageEmprestimosAtivos - 1})"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaEmprestimos"
+                       data-ajax-loading="#waitEmprestimos" data-ajax-begin="hideBookGridEmprestimos();" data-ajax-complete="showBookGridEmprestimos()">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números das Páginas -->
+                @for (int i = 1; i <= @ViewBag.TotalPagesEmprestimos; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPageEmprestimosAtivos ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Perfil", new { sectionActivated = "emprestimos-tab", page = i})"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaEmprestimos"
+                           data-ajax-loading="#waitEmprestimos" data-ajax-begin="hideBookGridEmprestimos();" data-ajax-complete="showBookGridEmprestimos()">@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.CurrentPageEmprestimosAtivos == ViewBag.TotalPagesEmprestimos ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Perfil", new {sectionActivated = "emprestimos-tab", page = ViewBag.CurrentPageEmprestimosAtivos + 1})"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaEmprestimos"
+                       data-ajax-loading="#waitEmprestimos" data-ajax-begin="hideBookGridEmprestimos();" data-ajax-complete="showBookGridEmprestimos()">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+   
+    }
+    else
+    {
+        <p>Não há empréstimos ativos no momento.</p>
+    }
+
+</div>
+
+<script>
+    function hideBookGridEmprestimos() {
+        // Oculta a div que contém a grid de livros
+        document.getElementById('TabelaEmprestimos').style.display = 'none';
+        document.getElementById('waitEmprestimos').classList.add('d-flex'); // Add the d-flex class
+        document.getElementById('waitEmprestimos').style.display = 'block'; // Ensure it's visible
+    }
+
+    function showBookGridEmprestimos() {
+        // Exibe novamente a div que contém a grid de livros
+        document.getElementById('TabelaEmprestimos').style.display = 'block';
+        document.getElementById('waitEmprestimos').classList.remove('d-flex'); // Remove the d-flex class
+        document.getElementById('waitEmprestimos').style.display = 'none'; // Hide the element
+    }
+
+    function closeModalEmprestimos() {
+        const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+        if (modal) {
+            const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+            bootstrapModal.hide(); // Fecha o modal
+        }
+    }
+
+</script>

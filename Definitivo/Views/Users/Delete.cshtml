@@ -1,0 +1,260 @@
+﻿@model UserRolesViewModel
+
+@{
+    ViewData["Title"] = "Excluir Utilizador";
+}
+
+<div class="container mt-5">
+    <div class="deletion-header mb-4">
+        <h1 class="text-danger">
+            <i class="fas fa-user-times"></i> @ViewData["Title"]
+        </h1>
+        <div class="alert alert-warning mt-3" role="alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Atenção:</strong> Esta ação não pode ser desfeita.
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">
+                <i class="fas fa-user-circle"></i> Detalhes do Utilizador
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 text-center mb-4 mb-md-0">
+                    <div class="user-image-container">
+                        <img src="@Url.Content(string.IsNullOrEmpty(Model.User.FotoNome) ? "~/Images/Users/userDefault.png" : "~/Images/Users/" + Model.User.FotoNome)"
+                             alt="@Model.User.UserName"
+                             class="img-thumbnail user-image" />
+                    </div>
+                    <div class="mt-3">
+                        <span class="badge bg-@(Model.User.EstadoAtivacao == "Ativo" ? "success" : "danger") p-2">
+                            @Model.User.EstadoAtivacao
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="user-details">
+                        <div class="detail-group">
+                            <h5 class="detail-section-title">Informações Básicas</h5>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-user"></i> Username</span>
+                                <span class="detail-value">@Model.User.UserName</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-envelope"></i> Email</span>
+                                <span class="detail-value">@Model.User.Email</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-phone"></i> Telemóvel</span>
+                                <span class="detail-value">@Model.User.PhoneNumber</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-group mt-4">
+                            <h5 class="detail-section-title">Detalhes Adicionais</h5>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Morada</span>
+                                <span class="detail-value">@Model.User.Morada</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-user-tag"></i> Cargo</span>
+                                <span class="detail-value">@Model.Role</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-group mt-4">
+                            <h5 class="detail-section-title">Estado da Conta</h5>
+                            <div class="verification-status">
+                                <div class="status-item @(Model.User.EmailConfirmed ? "verified" : "not-verified")">
+                                    <i class="fas @(Model.User.EmailConfirmed ? "fa-check-circle" : "fa-times-circle")"></i>
+                                    Email Verificado
+                                </div>
+                                <div class="status-item @(Model.User.PhoneNumberConfirmed ? "verified" : "not-verified")">
+                                    <i class="fas @(Model.User.PhoneNumberConfirmed ? "fa-check-circle" : "fa-times-circle")"></i>
+                                    Telemóvel Verificado
+                                </div>
+                                <div class="status-item @(Model.User.TwoFactorEnabled ? "verified" : "not-verified")">
+                                    <i class="fas @(Model.User.TwoFactorEnabled ? "fa-check-circle" : "fa-times-circle")"></i>
+                                    2FA Ativo
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons mt-4 text-center">
+        <form asp-action="Delete" class="d-inline-block">
+            <input type="hidden" asp-for="User.Id" />
+            <button type="submit" class="btn btn-danger btn-lg">
+                <i class="fas fa-trash-alt"></i> Confirmar Exclusão
+            </button>
+            <a asp-action="GerirUtilizadores" class="btn btn-secondary btn-lg ms-2">
+                <i class="fas fa-arrow-left"></i> Voltar à Lista
+            </a>
+        </form>
+    </div>
+</div>
+
+<style>
+    .deletion-header h1 {
+        font-weight: 600;
+    }
+
+
+    .detail-group {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .detail-section-title {
+        color: #495057;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 8px;
+    }
+
+    .detail-item {
+        display: flex;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+
+    .detail-label {
+        min-width: 140px;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .detail-label i {
+        width: 20px;
+        margin-right: 8px;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #212529;
+    }
+
+    .verification-status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .status-item {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .status-item i {
+        margin-right: 5px;
+    }
+
+    .verified {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .not-verified {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .action-buttons {
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+
+    .btn i {
+        margin-right: 8px;
+    }
+    .user-image-container {
+    position: relative;
+    padding: 20px;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin: 10px;
+    transition: all 0.3s ease;
+}
+
+.user-image-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.user-image {
+    max-width: 300px;
+    width: 100%;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    transition: all 0.4s ease;
+    border: 4px solid #fff;
+    object-fit: cover;
+    aspect-ratio: 1/1;
+}
+
+.user-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+/* Responsive adjustments */
+@@media (max-width: 768px) {
+    .user-image {
+        max-width: 250px;
+    }
+}
+
+@@media (max-width: 576px) {
+    .user-image {
+        max-width: 200px;
+    }
+}
+
+/* Add a subtle overlay effect */
+.user-image-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+    background: linear-gradient(
+        45deg,
+        rgba(255,255,255,0.1) 0%,
+        rgba(255,255,255,0.05) 100%
+    );
+    pointer-events: none;
+}
+
+/* Status badge positioning */
+.mt-3 .badge {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.mt-3 .badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+</style>

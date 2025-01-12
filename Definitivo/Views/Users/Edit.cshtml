@@ -1,0 +1,201 @@
+﻿@model Definitivo.Models.Perfil
+
+@{
+    ViewData["Title"] = "Editar Utilizador";
+}
+
+<div class="container mt-4 mb-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Edit" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card rounded-3 p-4 mb-4">
+                            <h5 class="border-bottom pb-2 mb-4">Dados Pessoais</h5>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="UserName" class="form-label fw-bold"></label>
+                                    <input asp-for="UserName" class="form-control" placeholder="Digite o nome de utilizador" />
+                                    <span asp-validation-for="UserName" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label asp-for="Email" class="form-label fw-bold"></label>
+                                    <input asp-for="Email" class="form-control" placeholder="Digite o seu email" />
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="PhoneNumber" class="form-label fw-bold"></label>
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Insira o seu número de telemóvel" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Morada" class="form-label fw-bold"></label>
+                                    <input asp-for="Morada" class="form-control" placeholder="Insira a sua morada" />
+                                    <span asp-validation-for="Morada" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card rounded-3 p-4 mb-4">
+                            <h5 class="border-bottom pb-2 mb-4">Foto de Perfil</h5>
+
+                            <input hidden asp-for="FotoNome" class="form-control" />
+
+                            <!-- Foto do Autor -->
+                            <div class="mb-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3" id="previewContainer">
+                                        <img src="/images/users/userDefault.png" id="fotoPreview"
+                                             class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" />
+                                        <input type="file" id="FotoUpload" name="FotoUpload" accept="image/*" class="d-none" onchange="previewImage(event)" />
+                                        <label for="FotoUpload" class="btn btn-sm btn-primary rounded-circle" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-upload"></i>
+                                        </label>
+                                    </div>
+
+                                    <p class="text-muted mt-2">Formato: JPG, PNG. Tamanho máximo: 10MB</p>
+                                    <span asp-validation-for="FotoNome" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div hidden class="row mt-4">
+                        <div class="col-md-6">
+                            <h4 class="mb-3">Configurações de Segurança</h4>
+
+                            <div class="mb-3 form-check">
+                                <input asp-for="LockoutEnabled" class="form-check-input" />
+                                <label asp-for="LockoutEnabled" class="form-check-label"></label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="LockoutEnd" class="form-label"></label>
+                                <input asp-for="LockoutEnd" class="form-control" />
+                                <span asp-validation-for="LockoutEnd" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h4 class="mb-3">Informações Administrativas</h4>
+
+                            <div class="mb-3">
+                                <label asp-for="EstadoAtivacao" class="form-label"></label>
+                                <select asp-for="EstadoAtivacao" class="form-select">
+                                    <option value="Ativo">Ativo</option>
+                                    <option value="Bloqueado">Bloqueado</option>
+                                    <option value="PorAtivar">Por Aprovar</option>
+                                </select>
+                                <span asp-validation-for="EstadoAtivacao" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="roleSelect" class="form-label">Role</label>
+                                <select id="roleSelect" name="role" class="form-select">
+                                    <option value="">Selecione uma role</option>
+                                    @foreach (var role in ViewBag.AvailableRoles)
+                                    {
+                                        <!option value="@role.Value" @(ViewBag.UserRoles.Contains(role.Value) ? "selected" : "")>
+                                            @role.Text
+                                        </!option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Confirmações do Utilizador -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Confirmações</h5>
+
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="EmailConfirmed" class="form-check-input" />
+                                        <label asp-for="EmailConfirmed" class="form-check-label ms-2">Email Confirmado</label>
+                                    </div>
+
+                                    <div class="form-check form-switch">
+                                        <input asp-for="PhoneNumberConfirmed" class="form-check-input" />
+                                        <label asp-for="PhoneNumberConfirmed" class="form-check-label ms-2">Telemóvel Confirmado</label>
+                                    </div>
+
+                                    <div class="form-check form-switch">
+                                        <input asp-for="TwoFactorEnabled" class="form-check-input" />
+                                        <label asp-for="TwoFactorEnabled" class="form-check-label ms-2">Autenticação de Dois Fatores</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <a asp-action="GerirUtilizadores" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left"></i>
+                        Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i>
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('fotoPreview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none'); // Mostra a imagem
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.classList.add('d-none'); // Oculta a imagem caso não tenha arquivo
+        }
+    }
+
+    // Função para carregar a imagem padrão quando a página carregar
+    window.onload = function () {
+        const preview = document.getElementById('fotoPreview');
+        const userImage = "@Model.FotoNome";
+
+        // Verifica se a imagem é null ou vazia
+        if (userImage == null || userImage == "") {
+            preview.src = "/Images/Users/userDefault.png"; // Caminho da imagem padrão
+        } else {
+            preview.src = "/Images/Users/" + userImage; // Caminho da imagem do usuário
+        }
+
+        // Remove a classe d-none para exibir a imagem
+        preview.classList.remove('d-none');
+    }
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

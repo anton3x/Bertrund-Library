@@ -1,0 +1,146 @@
+﻿@using System.Security.Claims
+@model UserProfileViewModel
+
+@{
+	ViewData["Title"] = "Chats";
+	var userLoggedId = User.Identity.IsAuthenticated ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
+}
+
+
+<div class="d-flex flex-column">
+    <!-- Main Content -->
+    <main class="mt-5 mb-5 flex-grow-1 container py-5">
+		<div class="card shadow-lg border-2 rounded-lg overflow-hidden" style="min-height: 500px;">
+            <div class="card-header d-flex flex-column flex-sm-row align-items-center gap-4 ps-4 pe-4">
+                <!-- Avatar -->
+				<img src="/Images/Users/@(Model.User.FotoNome ?? "userDefault.png")" alt="@Model.User.FotoNome" class="rounded-circle border border-3 border-light" style="width: 96px; height: 96px; object-fit: cover;" />
+
+                <div class="text-center text-sm-start flex-grow-1">
+                    <h2 class="card-title mb-0">@Model.User.UserName</h2>
+                    <div class="d-flex flex-wrap justify-content-center justify-content-sm-start gap-2 mt-2">
+	                    @if (Model.FavoriteGenres.Any())
+	                    {
+		                    @foreach (var genre in Model.FavoriteGenres.Take(5))
+		                    {
+			                    <span class="badge bg-secondary">@genre</span>
+		                    }
+	                    }
+	                    else
+	                    {
+		                    <span class="text-muted">Não existem géneros favoritos adicionados.</span>
+	                    }
+                    </div>
+                </div>
+
+                <a href="@(Model.User.Id != userLoggedId ? $"/Chats?idUser={Model.User.Id}" : "/Chats")" class="btn btn-primary" id="sendMessageBtn">
+                    <i class="bi bi-chat-text me-2"></i>Enviar Mensagem
+                </a>
+            </div>
+
+            <div class="card-body row g-4">
+                <!-- Left Column -->
+                <div class="col-md-6">
+                    <div class="mb-3 d-flex align-items-center gap-2">
+						<i class="bi bi-book me-2 text-primary fs-4"></i>
+						<span class="fs-5">@Model.TotalReviews Reviews</span>
+                    </div>
+
+                    <div class="mb-3 d-flex align-items-center gap-2">
+						<i class="bi bi-bookmark-check me-2 text-success fs-4"></i>
+						<span class="fs-5">@Model.BooksRead Livros Lidos</span>
+                    </div>
+
+					<div class="p-3 rounded border shadow moveAnimation">
+						<h5 class="fw-semibold mb-3 text-primary">Atualmente a Ler</h5>
+	                    <ul class="list-group">
+		                    @if (Model.CurrentlyReading.Any())
+		                    {
+								@foreach (var book in Model.CurrentlyReading.Take(4))
+			                    {
+									<li class="list-group-item d-flex align-items-center gap-3 border-0">
+					                    <i class="bi bi-book-half text-primary fs-5"></i>
+					                    <span class="fw-normal">@book</span>
+				                    </li>
+			                    }
+		                    }
+		                    else
+		                    {
+								<li class="list-group-item d-flex align-items-center gap-3 border-0">
+				                    <i class="bi bi-book-half text-primary fs-5"></i>
+									<span class="fw-normal">Não está a ler nenhum livro no momento.</span>
+			                    </li>
+		                    }
+	                    </ul>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-md-6">
+					<div class="mb-4 p-3 rounded border shadow moveAnimation">
+						<h5 class="fw-semibold mb-2 text-success">Avaliações Recentes</h5>
+		                <ul class="list-unstyled">
+			                @if (Model.Reviews.Any())
+			                {
+				                @foreach (var review in Model.Reviews.Take(3))
+				                {
+					                <li class="mb-2">
+						                <span class="fw-medium">@review.TituloLivro</span> por @review.User.UserName
+						                <div class="d-flex mt-1">
+							                @for (int i = 1; i <= 5; i++)
+							                {
+								                <i class="bi @(i <= review.Rating ? "bi-star-fill text-warning" : "bi-star text-muted") me-1"></i>
+							                }
+						                </div>
+					                </li>
+				                }
+			                } 
+			                else
+			                {
+				                <li class="mb-2">
+					                <div class="d-flex mt-1">
+						                <i class="bi bi-info-circle me-2"></i> Não existem avaliações recentes disponíveis.
+					                </div>
+				                </li>
+			                }
+		                </ul>
+	                </div>
+
+					<div class="p-3 rounded border shadow moveAnimation">
+						<h5 class="fw-semibold mb-2 text-warning">Conquistas</h5>
+		                <ul class="list-unstyled">
+			                @if (Model.Achievements.Any())
+			                {
+				                @foreach (var achievement in Model.Achievements.Take(3))
+				                {
+					                <li class="d-flex align-items-center gap-2 mb-2">
+						                <i class="bi bi-award-fill text-warning"></i>
+						                <span>@achievement</span>
+					                </li>
+				                }
+			                }
+			                else
+			                {
+				                <li class="d-flex align-items-center gap-2 mb-2">
+					                <i class="bi bi-award-fill text-warning"></i>
+					                <span>Ainda não foram conquistados prémios.</span>
+				                </li>
+			                }
+		                </ul>
+	                </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+	.moveAnimation {
+		transition: transform 0.2s ease;
+	}
+
+		.moveAnimation:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+		}
+</style>
+

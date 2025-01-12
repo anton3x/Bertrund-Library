@@ -1,0 +1,102 @@
+﻿@page
+@model ConfirmEmailModel
+@{
+	ViewData["Title"] = "Confirmação de Email";
+}
+
+<div class="d-flex align-items-center justify-content-center" style="height: 70vh;">
+	<div class="card shadow-lg rounded w-100" style="max-width: 800px;">
+		<div class="card-header bg-primary text-white py-4">
+			<div class="d-flex align-items-center justify-content-center gap-3">
+				<!-- Ícone -->
+				@*<i class="bi bi-envelope-check" style="font-size: 2rem; line-height: 1;"></i>*@
+				<!-- Título -->
+				<h4 class="fw-bold mb-0">@ViewData["Title"]</h4>
+			</div>
+		</div>
+
+
+		<!-- Corpo do Card -->
+		<div class="card-body p-4">
+			<div class="row g-4">
+				<!-- Coluna Esquerda -->
+				<div class="col-md-6">
+					<!-- Alerta de Sucesso -->
+					<div class="alert card-hover alert-success d-flex align-items-center border-start border-success border-4 shadow-sm p-3">
+						<i class="bi bi-check-circle fs-4 me-3"></i>
+						<div>
+							<h5 class="alert-heading mb-1">Parabéns!</h5>
+							<p class="mb-0">O seu email foi confirmado com sucesso.</p>
+						</div>
+					</div>
+
+					<!-- Informações Adicionais -->
+					<div class="card card-hover border-0 shadow">
+						<div class="card-body">
+							<h6 class="card-title text-primary">
+								<i class="bi bi-info-circle me-2"></i> Informações Importantes
+							</h6>
+							<p class="card-text text-muted">
+								Agora tem acesso total à nossa plataforma. Explore e aproveite todos os recursos disponíveis.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Coluna Direita -->
+				<div class="col-md-6">
+					<!-- Próximos Passos -->
+					<div class="card card-hover border-0 shadow">
+						<div class="card-body">
+							<h6 class="card-title text-primary">
+								<div class="d-flex align-items-center justify-content-start gap-1">
+									<i class="bi bi-list-task me-2 fs-2"></i>
+									<h5 class="mb-0 fw-bold" style="line-height: 1;">Próximos Passos</h5>
+								</div>
+							</h6>
+							<ul class="list-group list-group-flush">
+								<li class="list-group-item d-flex align-items-center border-0 px-0">
+									<i class="bi bi-person-circle text-primary me-2"></i>
+									<span>Complete o seu perfil</span>
+								</li>
+								<li class="list-group-item d-flex align-items-center border-0 px-0">
+									<i class="bi bi-book text-primary me-2"></i>
+									<span>Explore os nossos serviços</span>
+								</li>
+								<li class="list-group-item d-flex align-items-center border-0 px-0">
+									<i class="bi bi-rocket-takeoff text-primary me-2"></i>
+									<span>Comece a usar a plataforma</span>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Botões de Ação -->
+			<div class="text-center mt-5">
+				<a href="/" class="btn btn-primary me-3">
+					<i class="bi bi-house-door me-2"></i> Página Inicial
+				</a>
+				<a href="/Identity/Account/Login" class="btn btn-outline-primary">
+					<i class="bi bi-box-arrow-in-right me-2"></i> Fazer Login
+				</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	/* Adiciona uma elevação com efeito 3D ao passar o mouse */
+	.card-hover {
+		transition: transform 0.3s ease, box-shadow 0.3s ease;
+	}
+
+	.card-hover:hover {
+		transform: translateY(-10px);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+	}
+</style>
+
+@section Scripts {
+}

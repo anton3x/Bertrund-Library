@@ -1,0 +1,157 @@
+﻿@model Definitivo.Models.LivroCatalogoViewModel
+
+@{
+    ViewData["Title"] = "Catálogo";
+
+}
+
+<div class="container my-4">
+    <h2 class="display-4 mb-6 animate__animated animate__fadeInDown">Catálogo de Livros</h2>
+
+    <div class="row">
+
+        <!-- Sidebar with Filters (Collapsible on small screens) -->
+        <aside class="col-md-4 col-lg-3 mb-4 animate__animated animate__fadeInLeft section-to-animate">
+            <form asp-action="Catalogo" method="get" id="filterForm"
+                  data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+                  data-ajax-update="#Tabela1" data-ajax-loading="#wait" data-ajax-begin="hideBookGrid()" data-ajax-complete="showBookGrid()">
+
+                <!-- Collapsible filter button for small screens -->
+                <button class="btn btn-outline-primary w-100 d-md-none mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
+                    Mostrar Filtros
+                </button>
+
+                <div id="filtersCollapse" class="collapse d-md-block">
+                    <div class="livroGeneroBackgroungColor p-4 rounded-lg">
+                        <h3 class="h5 mb-4">Filtros</h3>
+                        <div class="mb-4">
+                            <h4 class="h6">Gênero</h4>
+                            @foreach (var categoria in Model.Categorias)
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="@categoria.Id" id="categoria-@categoria.Id" name="categorias"
+                                    @(Model.CategoriasSelecionadas.Contains(categoria.Id) ? "checked" : "") onchange="$('#filterForm').submit();">
+                                    <label class="form-check-label" for="categoria-@categoria.Id">@categoria.Nome</label>
+                                </div>
+                            }
+                        </div>
+                        <input type="hidden" name="sortOrder" value="@Model.SortOrder" />
+                        <div>
+                            <h4 class="h6">Estado</h4>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="Disponível" id="disponivel" name="estados"
+                                @(Model.EstadosSelecionados.Contains("Disponível") ? "checked" : "") onchange="$('#filterForm').submit();">
+                                <label class="form-check-label" for="disponivel">Disponível</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="Indisponivel" id="indisponivel" name="estados"
+                                @(Model.EstadosSelecionados.Contains("Indisponivel") ? "checked" : "") onchange="$('#filterForm').submit();">
+                                <label class="form-check-label" for="indisponivel">Indisponível</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3 visually-hidden">Aplicar Filtros</button>
+                    </div>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Main Content with Book Catalog and Sorting -->
+        <div class="col-md-8 col-lg-9 animate__animated animate__fadeInRight section-to-animate">
+            <!-- Sorting and Book Count -->
+            <div class="d-flex justify-content-end align-items-center mb-4">
+                <!--<p>Mostrando @(((Model.PaginaAtual - 1) * Model.TamanhoPagina) + 1)-@(Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalLivros)) de @Model.TotalLivros livros</p>-->
+                <form asp-action="Catalogo" method="get" id="orderForm" class="d-flex justify-content-end align-items-center mb-4"
+                      data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+                      data-ajax-update="#Tabela1"
+                      data-ajax-loading="#wait" data-ajax-begin="hideBookGrid()" data-ajax-complete="showBookGrid()"
+                >
+                    
+                    @foreach (var categoriaId in Model.CategoriasSelecionadas)
+                    {
+                        <input type="hidden" name="categorias" value="@categoriaId" />
+                    }
+                    @foreach (var estado in Model.EstadosSelecionados)
+                    {
+                        <input type="hidden" name="estados" value="@estado" />
+                    }
+                    <select name="sortOrder" class="form-select w-auto" onchange="$('#orderForm').submit();">
+                        <option value="title" selected="@(Model.SortOrder == "title")">Título ↑</option>
+                        <option value="title_desc" selected="@(Model.SortOrder == "title_desc")">Título ↓</option>
+                        <option value="author" selected="@(Model.SortOrder == "author")">Autor ↑</option>
+                        <option value="author_desc" selected="@(Model.SortOrder == "author_desc")">Autor ↓</option>
+                        <option value="publicationYear" selected="@(Model.SortOrder == "publicationYear")">Ano de Publicação ↑</option>
+                        <option value="publicationYear_desc" selected="@(Model.SortOrder == "publicationYear_desc")">Ano de Publicação ↓</option>
+                        <option value="insertionYear" selected="@(Model.SortOrder == "insertionYear")">Ano de Inserção ↑</option>
+                        <option value="insertionYear_desc" selected="@(Model.SortOrder == "insertionYear_desc")">Ano de Inserção ↓</option>
+                        <option value="popularity" selected="@(Model.SortOrder == "popularity")">Popularidade ↓</option>
+                        <option value="popularity_asc" selected="@(Model.SortOrder == "popularity_asc")">Popularidade ↑</option>
+                    </select>
+
+                </form>
+            </div>
+
+            <!-- Loading -->
+            <div id="wait" style="display:none" class="justify-content-center">
+                <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+                <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+            </div>
+
+            <div id="divBookGrid" class="animate__zoomIn section-to-animate">
+                <partial name="BookGrid" model="Model" />
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CSS -->
+<style>
+    .section-to-animate {
+        animation-delay: 0.2s;
+        animation-duration: 1s;
+    }
+
+    /* Default for light theme */
+    .livroHyperlinkColor {
+        color: black;
+    }
+
+    /* Dark theme */
+    body[data-bs-theme="dark"] .livroHyperlinkColor {
+        color: white;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate__fadeInUp', 'animate__animated'); // Adiciona as animações
+                    observer.unobserve(entry.target); // Para de observar depois da animação inicial
+                }
+            });
+        });
+
+        // Seleciona todas as secções a serem animadas
+        const sections = document.querySelectorAll('.section-to-animate');
+        sections.forEach(section => observer.observe(section));
+    });
+    function hideBookGrid() {
+        // Oculta a div que contém a grid de livros
+        document.getElementById('divBookGrid').style.display = 'none'; 
+        document.getElementById('wait').classList.remove('d-none'); // Add the d-flex class
+        document.getElementById('wait').classList.add('d-flex'); // Add the d-flex class
+        document.getElementById('wait').style.display = 'block'; // Ensure it's visible
+    }
+
+    function showBookGrid() {
+        // Exibe novamente a div que contém a grid de livros
+        document.getElementById('divBookGrid').style.display = 'block';
+        document.getElementById('wait').classList.remove('d-flex'); // Remove the d-flex class
+        document.getElementById('wait').classList.add('d-none'); // Add the d-flex class
+        document.getElementById('wait').style.display = 'none'; // Hide the element
+    }
+
+
+</script>

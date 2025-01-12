@@ -1,0 +1,24 @@
+﻿@page
+@model AccessDeniedModel
+@{
+    ViewData["Title"] = "Acesso Negado";
+}
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card border-danger shadow-lg">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 5rem;"></i>
+                    <h1 class="card-title text-danger mt-3">@ViewData["Title"]</h1>
+                    <p class="card-text lead mb-4">Ops! Você não tem permissão para aceder a este recurso.</p>
+                    <hr class="my-4">
+                    <p>Se acredita que isto é um erro, entre em contacto com o administrador do sistema ou tente fazer login novamente.</p>
+                    <a href="/" class="btn btn-primary btn-lg mt-3">
+                        <i class="bi bi-house-door-fill me-2"></i>Página Inicial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

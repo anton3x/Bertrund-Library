@@ -1,0 +1,99 @@
+﻿@model IEnumerable<Definitivo.Models.Categoria>
+
+@{
+    ViewBag.Title = "Gerir Categorias";
+}
+
+<div class="container">
+    <main class="mb-4">
+
+        <!-- Header Section -->
+        <div class="row mb-4 mt-4">
+            <div class="col-6">
+                <h1 class="h4 mb-3">Gerir Categorias</h1>
+            </div>
+            <div class="col-6 text-end">
+                <a class="btn btn-success" asp-action="Create">
+                    <i class="bi bi-plus-lg"></i> 
+                    Adicionar Categoria
+                </a>
+            </div>
+        </div>
+
+        <form id="GerirCategoriasOrderSearchForm" action="/Categorias/GerirCategorias" method="get"
+              data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+              data-ajax-update="#categoriesTable" data-ajax-loading="#waitGerirCategorias" data-ajax-begin="hideBookGridGerirCategorias()" data-ajax-complete="showBookGridGerirCategorias()">
+            <!-- Search and Order Section -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text"
+                               id="searchInput"
+                               name="searchBox"
+                               class="form-control"
+                               placeholder="Pesquisar categorias..." value="@ViewBag.QuerySearched">
+                               
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 mt-2 mt-md-0">
+                    <select class="form-select" name="orderSelect" id="sortOrder" onchange="$('#GerirCategoriasOrderSearchForm').submit();">
+                        <option value="" selected="@(ViewBag.orderSelect == "Nenhum")"> Ordenar por...</option>
+                        <option value="nome" selected="@(ViewBag.orderSelect == "nome")">Nome ↑</option>
+                        <option value="nome_desc" selected="@(ViewBag.orderSelect == "nome_desc")">Nome ↓</option>
+                        <option value="descricao" selected="@(ViewBag.orderSelect == "descricao")">Descrição ↑</option>
+                        <option value="descricao_desc" selected="@(ViewBag.orderSelect == "descricao_desc")">Descrição ↓</option>
+                        <option value="estado" selected="@(ViewBag.orderSelect == "estado")">Estado ↑</option>
+                        <option value="estado_desc" selected="@(ViewBag.orderSelect == "estado_desc")">Estado ↓</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <!-- Loading -->
+        <div id="waitGerirCategorias" style="display:none" class="justify-content-center">
+            <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+            <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+        </div>
+
+        <partial name="GerirCategoriasListing" model="Model" />
+
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+        $("#searchInput").autocomplete({
+            source: @ViewBag.TagsCategorias,
+            minLength: 3
+        });
+
+        // Inicializa a função quando o documento for carregado
+        document.addEventListener('DOMContentLoaded', function () {
+            showNotificationsGerirCategorias();
+        });
+
+        function hideBookGridGerirCategorias() {
+            // Oculta a div que contém a grid de Categorias
+            document.getElementById('categoriesTable').style.display = 'none';
+            document.getElementById('waitGerirCategorias').classList.add('d-flex'); // Add the d-flex class
+            document.getElementById('waitGerirCategorias').style.display = 'block'; // Ensure it's visible
+        }
+
+        function showBookGridGerirCategorias() {
+            // Exibe novamente a div que contém a grid de Categorias
+            document.getElementById('categoriesTable').style.display = 'block';
+            document.getElementById('waitGerirCategorias').classList.remove('d-flex'); // Remove the d-flex class
+            document.getElementById('waitGerirCategorias').style.display = 'none'; // Hide the element
+        }
+        function closeModalCategorias() {
+            const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+            if (modal) {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+                bootstrapModal.hide(); // Fecha o modal
+            }
+        }
+    </script>
+}

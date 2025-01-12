@@ -1,0 +1,108 @@
+﻿@model IEnumerable<Definitivo.Models.Livro>
+
+@{
+    ViewBag.Title = "Gerir Livros";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+        <h1 class="h3">Gerir Livros</h1>
+        <a class="btn btn-primary" asp-action="Create">
+            <i class="bi bi-plus-lg"></i> Adicionar Livro
+        </a>
+    </div>
+   
+    <!-- Search and Filters -->
+    <div class="mb-4">
+        <form asp-action="GerirLivros" id="GerirLivrosOrderSearchForm" method="get" class="row" 
+            data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+            data-ajax-update="#tabelaGerirLivros" data-ajax-loading="#waitGerirLivros" data-ajax-begin="hideBookGridGerirLivros()" data-ajax-complete="showBookGridGerirLivros()"
+        >
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" id="searchBooks" class="form-control" name="query" placeholder="Pesquisar livros..." value="@ViewBag.QuerySearched">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 mt-2 mt-md-0">
+                <select class="form-select" name="category" onchange="$('#GerirLivrosOrderSearchForm').submit();">
+                    <option value="Todos" selected="@(ViewBag.CategorySelected == null || ViewBag.CategorySelected == "Todos")">Selecione uma Categoria</option>
+                    @foreach (var categoria in (SelectList)ViewData["CategoriaId"])
+                    {
+                        <option value="@categoria.Value" selected="@(ViewBag.CategorySelected == categoria.Value)">@categoria.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 mt-2 mt-md-0">
+                <select class="form-select" name="state" onchange="$('#GerirLivrosOrderSearchForm').submit();">
+                    <option value="Todos" selected="@(ViewBag.StateSelected == null || ViewBag.StateSelected == "Todos")">Selecione um Estado</option>
+                    <option value="Disponível" selected="@(ViewBag.StateSelected == "Disponível")">Disponível</option>
+                    <option value="Indisponivel" selected="@(ViewBag.StateSelected == "Indisponivel")">Indisponível</option>
+                    <option value="Desativado" selected="@(ViewBag.StateSelected == "Desativado")">Desativado</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading -->
+    <div id="waitGerirLivros" style="display:none" class="justify-content-center">
+        <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+        <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+    </div>
+
+    <partial name="GerirLivrosListing" model="Model" />
+
+</div>
+
+@section Scripts {
+    <script>
+
+        $("#searchBooks").autocomplete({source: @ViewBag.TagsLivros});
+
+        // Nova função para mostrar o toast
+        function showNotification(message) {
+            console.log(message);
+            const toast = new bootstrap.Toast(toastElement, {
+                animation: true,
+                autohide: true,
+                delay: 3000
+            });
+
+            // Mostra o toast
+            toast.show();
+        }
+        function hideBookGridGerirLivros() {
+            // Oculta a div que contém a grid de livros
+            document.getElementById('tabelaGerirLivros').style.display = 'none';
+            document.getElementById('waitGerirLivros').classList.add('d-flex'); // Add the d-flex class
+            document.getElementById('waitGerirLivros').style.display = 'block'; // Ensure it's visible
+        }
+
+        function showBookGridGerirLivros(message) {
+            // Exibe novamente a div que contém a grid de livros
+            document.getElementById('tabelaGerirLivros').style.display = 'block';
+            document.getElementById('waitGerirLivros').classList.remove('d-flex'); // Remove the d-flex class
+            document.getElementById('waitGerirLivros').style.display = 'none'; // Hide the element
+
+            //showNotification();
+
+        }
+        function closeModalLivros() {
+            const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+            if (modal) {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+                bootstrapModal.hide(); // Fecha o modal
+            }
+        }
+
+        // Inicializa a função quando o documento for carregado
+        document.addEventListener('DOMContentLoaded', function () {
+            showNotificationsGerirLivros();
+        });
+        
+
+
+    </script>
+}

@@ -1,0 +1,204 @@
+﻿@model IEnumerable<Definitivo.Models.Emprestimo>
+
+@{
+    ViewBag.Title = "Gerir Empréstimos";
+}
+
+<div class="container">
+    <!-- Main Content -->
+    <main class="mb-4">
+        <h1 class="h4 mb-4 mt-4">Gerir Empréstimos</h1>
+
+        <!-- Contadores de Empréstimos - Pequenos e alinhados à esquerda -->
+        <div class="row text-center text-md-start mb-4">
+            <div class="col-6 col-md-3 mb-4 mb-md-0">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Total de Empréstimos</h6>
+                        <p class="fs-3" id="numTotalEmprestimosValue">@ViewBag.TotalEmprestimos</p> <!-- fs-3 para número menor -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-4 mb-md-0">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Empréstimos Ativos</h6>
+                        <p class="fs-3" id="numEmprestimosAtivosValue">@ViewBag.TotalEmprestimosAtivos</p> <!-- fs-3 para número menor -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Empréstimos Pendentes</h6>
+                        <p class="fs-3" id="numEmprestimosPendentesValue">@ViewBag.TotalEmprestimosPendentes</p> <!-- fs-3 para número menor -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Empréstimos Atrasados</h6>
+                        <p class="fs-3" id="numEmprestimosAtrasadosValue">@ViewBag.TotalEmprestimosAtrasados</p> <!-- fs-3 para número menor -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="get" action="@Url.Action("GerirEmprestimos")" id="OrderSearchGerirEmprestimosForm"
+              data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+              data-ajax-update="#GerirEmprestimosTable" data-ajax-loading="#waitGerirEmprestimos" data-ajax-begin="hideBookGridGerirEmprestimos()" data-ajax-complete="showBookGridGerirEmprestimos();atualizarValoresGerirEmprestimos();">
+            
+              <!-- Barra de Pesquisa e Botão Adicionar -->
+            <div class="d-flex justify-content-between mb-4">
+                <div class="input-group w-50">
+                    <input type="hidden" name="filterStatus" id="filterStatusInput" value="@ViewBag.StatusFilter" />
+                    <input type="text" class="form-control" placeholder="Pesquisar por cliente ou livro..." name="searchTerm" id="searchEmprestimos" value="@ViewBag.SearchTerm" />
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    
+                </div>
+                <div class="col-md-4 mt-2 mt-md-0">
+                    <select class="form-select" name="orderSelect" id="sortOrder" onchange="$('#OrderSearchGerirEmprestimosForm').submit();">
+                        <option value="" selected="@(ViewBag.orderSelect == "Nenhum")"> Ordenar por...</option>
+                        <option value="autor" selected="@(ViewBag.orderSelect == "autor")">Autor ↑</option>
+                        <option value="autor_desc" selected="@(ViewBag.orderSelect == "autor_desc")">Autor ↓</option>
+                        <option value="cliente" selected="@(ViewBag.orderSelect == "cliente")">Username ↑</option>
+                        <option value="cliente_desc" selected="@(ViewBag.orderSelect == "cliente_desc")">Username ↓</option>
+                        <option value="titulo" selected="@(ViewBag.orderSelect == "titulo")">Titulo ↑</option>
+                        <option value="titulo_desc" selected="@(ViewBag.orderSelect == "titulo_desc")">Titulo ↓</option>
+                        <option value="dataPrevista" selected="@(ViewBag.orderSelect == "dataPrevista")">Data Prevista ↑</option>
+                        <option value="dataPrevista_desc" selected="@(ViewBag.orderSelect == "dataPrevista_desc")">Data Prevista ↓</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filtros de Status -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <button type="button" class="nav-link @(ViewBag.StatusFilter == "Todos" ? "active" : "") p-2 p-sm-2"
+                            onclick="setFilterStatus('Todos', this)">
+                        Todos
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link @(ViewBag.StatusFilter == "Ativo" ? "active" : "") p-2 p-sm-2"
+                            onclick="setFilterStatus('Ativo', this)">
+                        Ativos
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link @(ViewBag.StatusFilter == "Pendente" ? "active" : "") p-2 p-sm-2"
+                            onclick="setFilterStatus('Pendente', this)">
+                        Pendentes
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link @(ViewBag.StatusFilter == "Devolvido" ? "active" : "") p-2 p-sm-2"
+                            onclick="setFilterStatus('Devolvido', this)">
+                        Devolvidos
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link @(ViewBag.StatusFilter == "Atrasado" ? "active" : "") p-2 p-sm-2"
+                            onclick="setFilterStatus('Atrasado', this)">
+                        Atrasados
+                    </button>
+                </li>
+            </ul>
+        </form>
+
+        <!-- Loading -->
+        <div id="waitGerirEmprestimos" style="display:none" class="justify-content-center">
+            <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+            <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+        </div>
+
+        <partial name="GerirEmprestimosListing" model="Model" />
+
+    </main>
+</div>
+
+
+@section Scripts {
+    <script>
+
+        $("#searchEmprestimos").autocomplete({ source: @ViewBag.TagsEmprestimos,
+            minLength: 3
+        });
+        // Inicializa a função quando o documento for carregado
+        document.addEventListener('DOMContentLoaded', function () {
+            showNotificationsGerirEmprestimos();
+        });
+        // Atualiza o valor do statusFilter no input oculto
+        function setFilterStatus(value, button) {
+            // Atualizar o valor do campo oculto
+            document.getElementById('filterStatusInput').value = value;
+
+            // Remover a classe active de todos os botões
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+
+            // Adicionar a classe active ao botão clicado
+            button.classList.add('active');
+
+            // Submeter o formulário
+            //button.form.submit();
+            $('#OrderSearchGerirEmprestimosForm').submit();
+        }
+
+        function hideBookGridGerirEmprestimos() {
+            // Oculta a div que contém a grid de Categorias
+            document.getElementById('GerirEmprestimosTable').style.display = 'none';
+            document.getElementById('waitGerirEmprestimos').classList.add('d-flex'); // Add the d-flex class
+            document.getElementById('waitGerirEmprestimos').style.display = 'block'; // Ensure it's visible
+        }
+
+        function showBookGridGerirEmprestimos() {
+            // Exibe novamente a div que contém a grid de Categorias
+            document.getElementById('GerirEmprestimosTable').style.display = 'block';
+            document.getElementById('waitGerirEmprestimos').classList.remove('d-flex'); // Remove the d-flex class
+            document.getElementById('waitGerirEmprestimos').style.display = 'none'; // Hide the element
+        }
+        function atualizarValoresGerirEmprestimos() {
+        $.ajax({
+            url: '/Emprestimos/ObterValoresGerirEmprestimo',
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            beforeSend: function() {
+                console.log('Iniciando requisição...');
+            },
+            success: function (data) {
+                console.log('Dados recebidos:', data);
+
+                if (Array.isArray(data)) {
+                    $('#numTotalEmprestimosValue').text(data[0]);
+                    $('#numEmprestimosAtivosValue').text(data[1]);
+                    $('#numEmprestimosPendentesValue').text(data[2]);
+                    $('#numEmprestimosAtrasadosValue').text(data[3]);
+                } else {
+                    console.error('Dados recebidos não são um array:', data);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Status:', status);
+                console.error('Erro:', error);
+                console.error('Resposta:', xhr.responseText);
+            },
+            complete: function() {
+                console.log('Requisição finalizada');
+            }
+        });
+        }
+
+        function closeModalEmprestimos() {
+            const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+            if (modal) {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+                bootstrapModal.hide(); // Fecha o modal
+            }
+        }
+
+    </script>
+}

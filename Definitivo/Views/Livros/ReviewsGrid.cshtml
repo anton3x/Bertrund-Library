@@ -1,0 +1,245 @@
+﻿@model BookDetailsViewModel
+
+<div id="tabelaReviews">
+    @if (Model.Book.Reviews != null && Model.Book.Reviews.Any())
+    {
+        @foreach (var review in Model.Book.Reviews)
+        {
+            <div class="card mb-4 shadow">
+                <div class="card-body p-4 rounded">
+                    <div class="d-flex align-items-center mb-3">
+                        <!-- Imagem do Utilizador -->
+
+                        <a href="@Url.Action("PerfilPublico", "Users", new { userId = review.UserId})">
+                            <img src="/Images/Users/@(review.User.FotoNome ?? "userDefault.png")"
+                                 alt="Foto de @review.User.UserName"
+                                 class="rounded-circle me-3"
+                                 style="width: 50px; height: 50px; object-fit: cover;" />
+                        </a>
+
+                        <div>
+                            <a href="@Url.Action("PerfilPublico", "Users", new { userId = review.UserId})" class="text-decoration-none">
+                                <h6 class="card-title mb-1">
+                                    <strong class="text-primary">@review.User.UserName</strong>
+                                </h6>
+                            </a>
+                            <p class="text-muted small mb-0">@review.CreatedAt.ToString("dd/MM/yyyy")</p>
+                        </div>
+                    </div>
+
+                    <div class="d-block" id="textReviewNonEdit-@review.Id">
+                        <p class="card-text mb-3 text-secondary">@review.Text</p>
+                    </div>
+                    
+                    <!-- Área de Edição da Review (inicialmente escondida) -->
+                    <div class="d-none" id="textReviewEdit-@review.Id">
+                        <form asp-action="UpdateReview" asp-controller="Livros" method="post" id="updateReviewForm-@review.Id"
+                              data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" 
+                              data-ajax-update="#tabelaReviews"
+                              data-ajax-loading="#waitReviews" data-ajax-begin="hideReviewGrid()" 
+                              data-ajax-complete="showReviewGrid()">
+                            <div class="mb-2">
+                                <textarea class="form-control" id="reviewText-@review.Id" rows="3" name="Text">@review.Text</textarea>
+                            </div>
+
+                            <div class="mb-2">
+                                <div id="starRating-@review.Id" class="star-rating">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <span class="starEdit" data-value="@i">
+                                            <i class="bi @(i <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
+                                        </span>
+                                    }
+                                </div>
+                                <input type="hidden" id="reviewRatingInput-@review.Id" name="ratingUpdated" value="@review.Rating" />
+                            </div>
+                            
+                            <input type="hidden" name="reviewId" value="@review.Id" />
+                            <input type="hidden" name="livroId" value="@Model.Book.ID" />
+                            <input type="hidden" name="sortOrder" value="@Model.SortOrder" />
+
+                            <button type="submit" class="d-none" id="submitButton-@review.Id"></button>
+                        </form>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between" id="reviewContainer-@review.Id">
+                        <!-- Avaliação com Estrelas -->
+                        <div class="d-flex align-items-center" id="starsRatingReviewNonEdit-@review.Id">
+                            <p class="text-warning mb-0 me-3">
+                                @for (int i = 0; i < review.Rating; i++)
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                                @for (int i = review.Rating; i < 5; i++)
+                                {
+                                    <i class="bi bi-star"></i>
+                                }
+                            </p>
+
+                            <!-- Indicador de Leitura -->
+                            @if (review.Lido)
+                            {
+                                <span class="badge bg-success">Leu o Livro</span>
+                            }
+                        </div>
+
+                        <!-- Botão Eliminar -->
+                        @if (User.Identity.IsAuthenticated && User.Identity.Name == review.User.UserName)
+                        {
+                            <div class="d-flex">
+                                <div id ="botoesEdit-@review.Id" class="d-none gap-2">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="$('#submitButton-@review.Id').click();">Guardar</button>
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="editarMode(@review.Id)">Cancelar</button>
+                                </div>
+
+                                <div id="botoesNonEdit-@review.Id" class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="editReviewBtn" onclick="editarMode(@review.Id)">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <form asp-action="DeleteReview" asp-controller="Livros" asp-route-livroId="@Model.Book.ID" asp-route-reviewId="@review.Id" method="post"
+                                          data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#tabelaReviews"
+                                          data-ajax-loading="#waitReviews" data-ajax-begin="hideReviewGrid()" data-ajax-complete="showReviewGrid()">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <input type="hidden" name="sortOrder" value="@Model.SortOrder" />
+                                    </form>
+                                </div>
+                            </div>
+
+                        }
+                    </div>
+                </div>
+            </div>
+
+        }
+        <!-- Pagination Buttons -->
+        <div class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination pagination-md flex-wrap">
+                    <!-- Botão Anterior -->
+                    <li class="page-item @(Model.PaginaAtual == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Review",
+                                    new {
+                                        bookId = Model.Book.ID,
+                                        page = Model.PaginaAtual - 1,
+                                        sortOrder = Model.SortOrder
+                                        }
+                                    )"
+                           tabindex="@(Model.PaginaAtual == 1 ? "-1" : "0")"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tabelaReviews"
+                           data-ajax-loading="#waitReviews" data-ajax-begin="hideReviewGrid()" data-ajax-complete="showReviewGrid()">
+                            Anterior
+                        </a>
+                    </li>
+
+                    @for (int i = 1; i <= Model.TotalPaginas; i++)
+                    {
+                        <li class="page-item @(i == Model.PaginaAtual ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Review",
+                                            new {
+                                                bookId = Model.Book.ID,
+                                                page = i,
+                                                sortOrder = Model.SortOrder
+                                                }
+                                            )"
+                               data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tabelaReviews"
+                               data-ajax-loading="#waitReviews" data-ajax-begin="hideReviewGrid()" data-ajax-complete="showReviewGrid()">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <!-- Botão Seguinte -->
+                    <li class="page-item @(Model.PaginaAtual == Model.TotalPaginas ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Review",
+                            new {
+                                bookId = Model.Book.ID,
+                                page = Model.PaginaAtual + 1,
+                                sortOrder = Model.SortOrder
+                                }
+                            )"
+                           tabindex="@(Model.PaginaAtual == Model.TotalPaginas ? "-1" : "0")"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tabelaReviews"
+                           data-ajax-loading="#waitReviews" data-ajax-begin="hideReviewGrid()" data-ajax-complete="showReviewGrid()">
+                            Seguinte
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">Nenhuma avaliação disponível para este livro.</p>
+    }
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script>
+    if ($('input[name="sortOrder"]').length && $('select[name="sortOrder"]').length) {
+        $('input[name="sortOrder"]').val($('select[name="sortOrder"]').val());
+    }
+
+    $('select[name="sortOrder"]').on('change', function () {
+        $('input[name="sortOrder"]').val($(this).val());
+    });
+    function editarMode(reviewId) {
+        $("#textReviewNonEdit-" + reviewId).toggleClass("d-none");
+        $("#textReviewEdit-" + reviewId).toggleClass("d-none");
+        $("#textReviewNonEdit-" + reviewId).toggleClass("d-block");
+        $("#textReviewEdit-" + reviewId).toggleClass("d-block");
+        $("#botoesNonEdit-" + reviewId).toggleClass("d-flex");
+        $("#botoesNonEdit-" + reviewId).toggleClass("d-none");
+        $("#botoesEdit-" + reviewId).toggleClass("d-flex");
+        $("#botoesEdit-" + reviewId).toggleClass("d-none");
+        $("#starsRatingReviewNonEdit-" + reviewId).toggleClass("d-flex");
+        $("#starsRatingReviewNonEdit-" + reviewId).toggleClass("d-none");
+
+        let reviewContainer = $("#reviewContainer-" + reviewId);
+        if (reviewContainer.hasClass("justify-content-between")) {
+            reviewContainer.removeClass("justify-content-between").addClass("justify-content-end");
+        } else {
+            reviewContainer.removeClass("justify-content-end").addClass("justify-content-between");
+        }
+    }
+
+    document.querySelectorAll('[id^="starRating-"]').forEach(starContainer => {
+        console.log(starContainer);
+        const stars = starContainer.querySelectorAll('.starEdit');
+        const reviewId = starContainer.id.split('-')[1];
+        const ratingInput = document.getElementById(`reviewRatingInput-${reviewId}`);
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const value = parseInt(star.getAttribute('data-value'));
+                ratingInput.value = value;
+                highlightStars(starContainer, value);
+            });
+        });
+
+        function highlightStars(container, value) {
+            container.querySelectorAll('.starEdit').forEach(star => {
+                if (parseInt(star.getAttribute('data-value')) <= value) {
+                    star.innerHTML = '<i class="bi bi-star-fill text-warning"></i>';
+                } else {
+                    star.innerHTML = '<i class="bi bi-star"></i>';
+                }
+            });
+        }
+    });
+
+</script>
+
+<style>
+    .starEdit {
+        cursor: pointer;
+        font-size: 1.5rem;
+        color: #ffc107; /* Cor das estrelas preenchidas */
+    }
+
+    .starEdit i {
+        transition: color 0.2s;
+    }
+
+</style>

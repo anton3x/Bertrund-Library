@@ -1,0 +1,111 @@
+﻿@page
+@using Microsoft.AspNetCore.Http.Features
+@model TwoFactorAuthenticationModel
+@{
+    ViewData["Title"] = "Autenticação de Dois Fatores (2FA)";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<div class="container mt-4 mb-2">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <partial name="_StatusMessage" for="StatusMessage" />
+
+            <div class="text-center mb-4">
+                <i class="bi bi-shield-lock text-primary" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-3">@ViewData["Title"]</h3>
+            </div>
+
+            @{
+                var consentFeature = HttpContext.Features.Get<ITrackingConsentFeature>();
+                @if (consentFeature?.CanTrack ?? true)
+                {
+                    @if (Model.Is2faEnabled)
+                    {
+                        <div class="mb-4">
+                            @if (Model.RecoveryCodesLeft == 0)
+                            {
+                                <div class="alert alert-danger d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <div>
+                                        <strong>Não tem códigos de recuperação disponíveis.</strong>
+                                        <p class="mb-0">Deve <a asp-page="./GenerateRecoveryCodes" class="alert-link">gerar um novo conjunto de códigos de recuperação</a> antes de poder iniciar sessão com um código de recuperação.</p>
+                                    </div>
+                                </div>
+                            }
+                            else if (Model.RecoveryCodesLeft == 1)
+                            {
+                                <div class="alert alert-danger d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <div>
+                                        <strong>Tem 1 código de recuperação disponível.</strong>
+                                        <p class="mb-0">Pode <a asp-page="./GenerateRecoveryCodes" class="alert-link">gerar um novo conjunto de códigos de recuperação</a>.</p>
+                                    </div>
+                                </div>
+                            }
+                            else if (Model.RecoveryCodesLeft <= 3)
+                            {
+                                <div class="alert alert-warning d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <div>
+                                        <strong>Tem @Model.RecoveryCodesLeft códigos de recuperação disponíveis.</strong>
+                                        <p class="mb-0">Deve <a asp-page="./GenerateRecoveryCodes" class="alert-link">gerar um novo conjunto de códigos de recuperação</a>.</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            @if (Model.IsMachineRemembered)
+                            {
+                                <form method="post">
+                                    <button type="submit" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-laptop me-2"></i>Esquecer este navegador
+                                    </button>
+                                </form>
+                            }
+                            <a asp-page="./Disable2fa" class="btn btn-danger">
+                                <i class="bi bi-shield-x me-2"></i>Desativar 2FA
+                            </a>
+                            <a asp-page="./GenerateRecoveryCodes" class="btn btn-primary">
+                                <i class="bi bi-key me-2"></i>Gerar novos códigos de recuperação
+                            </a>
+                        </div>
+                    }
+
+                    <div class="mt-4 d-flex justify-content-center gap-3">
+                        @if (!Model.HasAuthenticator)
+                        {
+                            <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-success w-100">
+                                <i class="bi bi-shield-plus me-2"></i>Adicionar aplicação de autenticação
+                            </a>
+                        }
+                        else
+                        {
+                            <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
+                                <i class="bi bi-shield-check me-2"></i>Configurar aplicação de autenticação
+                            </a>
+                            <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-warning">
+                                <i class="bi bi-arrow-repeat me-2"></i>Repor aplicação de autenticação
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-danger d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>
+                            <strong>Política de privacidade e cookies não aceite.</strong>
+                            <p class="mb-0">Deve aceitar a política antes de poder ativar a autenticação de dois fatores.</p>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

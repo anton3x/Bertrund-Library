@@ -1,0 +1,126 @@
+﻿@model AutorViewModel
+
+@{
+    ViewData["Title"] = "Página do Autor";
+}
+
+<div class="container my-4">
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="w-300px">
+                <img src="~/Images/Autores/@Model.Autor.FotoNome" 
+                     class="img-fluid rounded-lg shadow-lg mb-4 w-100 h-100 object-fit-cover" 
+                     alt="Retrato do autor" />
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4>Atributos do Autor</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Nascimento:</strong> @Model.Autor.DataNascimento.ToString()</li>
+                        @if (Model.Autor.DataFalecimento.HasValue)
+                        {
+                            <li><strong>Falecimento:</strong> @Model.Autor.DataFalecimento.Value.ToString()</li>
+                        }
+                        <li><strong>Nacionalidade:</strong> @Model.Autor.Nacionalidade</li>
+                        <li>
+                            <strong>Gêneros:</strong>
+                            @for (int i = 0; i < Model.Generos.Count; i++)
+                            {
+                                <span>@Model.Generos[i].Nome</span>
+                                @if (i < Model.Generos.Count - 1)
+                                {
+                                    <span>, </span>
+                                }
+                            }
+                        </li>
+                        <!--<li><strong>Obras Notáveis:</strong> @string.Join(", ", Model.ObrasNotaveis)</li>-->
+                        <li>
+                            <strong>Obras Notáveis:</strong>
+                            @for (int i = 0; i < Model.ObrasNotaveis.Count; i++)
+                            {
+                                <span>@Model.ObrasNotaveis[i].Titulo</span>
+                                @if (i < Model.ObrasNotaveis.Count - 1)
+                                {
+                                    <span>, </span>
+                                }
+                            }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h2 class="display-4 pt-sm-1 pt-0">@Model.Autor.Nome</h2>
+            <div class="mb-4">
+                @foreach (var genero in Model.Generos.Distinct())
+                {
+                    <span class="mb-4">
+                        <a class=" badge text-decoration-none text-white animated-badge" asp-controller="Livros" asp-action="Catalogo" asp-route-categorias="@genero.Id">@genero.Nome</a>
+                    </span>
+                }
+            </div>
+
+            <ul class="nav nav-tabs" id="authorTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="biografia-tab" data-bs-toggle="tab" data-bs-target="#biografia" type="button" role="tab">Biografia</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="obras-tab" data-bs-toggle="tab" data-bs-target="#obras" type="button" role="tab">Obras</button>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3" id="authorTabContent">
+                <div class="tab-pane fade show active" id="biografia" role="tabpanel">
+                    <p class="text-muted">@Model.Autor.Biografia</p>
+                </div>
+
+                <div class="tab-pane fade" id="obras" role="tabpanel">
+                    <div id="waitObrasAutor" style="display:none" class="justify-content-center align-items-center">
+                        <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+                        <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+                    </div>
+                    <div id="obrasAutorDiv">
+                        <partial name="_AutorLivrosListing" model="Model" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .animated-badge {
+        background-color: rgb(0, 123, 255); /* Azul  */
+    }
+
+
+        .animated-badge:hover {
+            background-color: rgb(51, 153, 255); /* Azul mais claro */
+            cursor: pointer;
+        }
+
+        .animated-badge:active {
+            background-color: rgb(0, 92, 191); /* Azul mais escuro */
+            transform: scale(0.95); /* encolhimento ao clicar */
+        }
+</style>
+
+<script>
+    function hideObrasAutor() {
+        // Oculta a div que contém a grid de Categorias
+        document.getElementById('obrasAutorDiv').style.display = 'none';
+        document.getElementById('waitObrasAutor').classList.add('d-flex'); // Add the d-flex class
+        document.getElementById('waitObrasAutor').style.display = 'block'; // Ensure it's visible
+    }
+
+    function showObrasAutor() {
+        // Exibe novamente a div que contém a grid de Categorias
+        document.getElementById('obrasAutorDiv').style.display = 'block';
+        document.getElementById('waitObrasAutor').classList.remove('d-flex'); // Remove the d-flex class
+        document.getElementById('waitObrasAutor').style.display = 'none'; // Hide the element
+    }
+</script>

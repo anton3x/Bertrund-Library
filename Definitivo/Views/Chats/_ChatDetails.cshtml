@@ -1,0 +1,854 @@
+﻿@model Definitivo.Models.ChatViewModel
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Chats";
+    var userId = User.Identity.IsAuthenticated ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
+    var senderUserName = User.Identity.IsAuthenticated ? User.Identity.Name : null;
+    var receiverId = Model.UserId;
+    var receiverUserName = Model.UserName;
+}
+
+<div class="chat-container" id="chat-container-div" style="height: 60vh;">
+    @if (Model.UserId == null)
+    {
+        <!-- Área do Chat Selecionado -->
+        <div class="py-0 px-5 d-flex align-items-center justify-content-center" id="chatArea" style="height: 60vh;">
+            <div class="text-center">
+                <!-- Ícone de Mensagens (usando ícones do Bootstrap) -->
+                <div class="mb-4">
+                    <i class="bi bi-chat" style="font-size: 4rem; color: #d1d1d1;"></i>
+                </div>
+
+                <!-- Mensagem de Boas-Vindas -->
+                <h3 class="fw-bold">Bem-vindo às suas mensagens</h3>
+                <p class="text-muted">Selecione uma conversa à esquerda ou inicie uma nova para começar a trocar mensagens</p>
+
+                <!-- Botão para Iniciar Nova Conversa
+                <button class="btn btn-outline-dark">
+                    <i class="bi bi-plus-lg"></i> Iniciar nova conversa
+                </button>-->
+            </div>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" value="@Model.UserId" id="userIdInputChat"/>
+        <div class="d-flex border-bottom pb-2 mb-3 align-items-center justify-content-between gap-3">
+            <div class="d-flex gap-2">
+                <a href="@Url.Action("PerfilPublico", "Users", new { userId = Model.UserId})">
+                    <img src="~/Images/Users/@Model.UserImage" class="rounded-circle" width="35" height="35" />
+                </a>
+                <h4 class="mb-0">@Model.UserName</h4>
+            </div>
+
+            <!-- Botões de Controlo -->
+            <div class="d-none align-items-center gap-3 justify-content-center" id="inCallDiv">
+                <span id="callTimer" class="fw-light fs-6">Chamada - 00:00</span>
+
+                <div class="d-flex align-items-center gap-2 justify-content-center">
+                    <!-- Botão para terminar a chamada -->
+                    <button id="endCallButton" class="btn btn-danger rounded-circle" title="Terminar Chamada" onclick="closeCall()">
+                        <i class="bi bi-telephone-x"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2" id="makeACallDiv">
+                <button class="btn btn-primary rounded-circle" title="Fazer Chamada" onclick="startVideoCall()">
+                    <i class="bi bi-telephone"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="callContainer" style="display: none; width: 100%; height: 82%; border: 1px solid #ccc; border-radius: 8px;"></div>
+
+        <div class="chat-messages overflow-auto mb-1" style="height: calc(100% - 150px); box-sizing: border-box;" id="messagesList">
+
+            @foreach (var message in Model.Messages)
+            {
+                <div class="d-none">
+                    <form method="get" data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+                          data-ajax-update="#chat-container-div" data-ajax-loading="#waitChat"
+                          data-ajax-begin="hideChat();" data-ajax-complete="showChat();"
+                          asp-action="OpenChat" asp-controller="Chats">
+                        <input type="hidden" name="userId" value="@Model.UserId" />
+                        <input type="hidden" name="pageNumber" value="@(Model.CurrentPage + 1)" />
+                        <input type="hidden" name="pageSize" value="10" />
+                        <button type="submit" class="btn btn-outline-primary" id="loadMoreButton">Carregar Mais</button>
+                    </form>
+                </div>
+
+                <div class="mb-2 d-flex @(message.Sender.Id == userId ? "justify-content-end pe-2" : "justify-content-start")" id="message-@(message.Id)">
+                    <div class="p-3 rounded position-relative"
+                         style="max-width: 60%; min-width: 35%; background-color: @(message.Sender.Id == userId ? "#007bff" : "#c5c5c5"); color: @(message.Sender.Id == userId ? "white" : "black"); word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
+
+                        @if (message.ReplyTo != null)
+                        {
+                            <div class="reply-to mb-2 p-2 rounded" style="background-color: #e9ecef; color: #6c757d;">
+                                <small>Em resposta a:</small>
+                                <p class="mb-0">@Model.Messages.FirstOrDefault(m => m.Id == message.ReplyTo)?.Content</p>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(message.FileName))
+                        {
+	                        var isImage = message.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+	                                      message.FileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+	                                      message.FileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+	                                      message.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+
+
+	                        <a href="~/Files/uploads/@message.FileName" target="_blank" class="d-block text-decoration-none preview-trigger" onmouseover="showImg('imgMsg-@message.Id')" onmouseout="showImg('imgMsg-@message.Id')"
+	                           style="color: @(message.Sender.Id == userId ? "white" : "black");">
+		                        @Html.Raw(!isImage ? "<i class='bi bi-paperclip'></i> Ficheiro" : "<i class='bi bi-file-earmark-image'></i> Imagem")
+	                        </a>
+
+	                        @if (isImage)
+	                        {
+		                        <div class="image-preview position-absolute" id="imgMsg-@message.Id" style="display: none; z-index: 1000; max-width: 100px; border: 1px solid #ccc; border-radius: 5px; background: white;  left: 100px;">
+			                        <img src="~/Files/uploads/@message.FileName" alt="Preview da Imagem" style="width: 100%; max-width: 100px; height: auto;" />
+		                        </div>
+	                        }
+
+                        }
+
+
+                        <p id="messageContent-@(message.Id)" class="mb-1 message-content">@message.Content</p>
+
+                        <div class="reactions d-grid mt-1" style="grid-template-columns: repeat(4, 1fr); gap: 2px;">
+                            @if (message.Reactions.Any())
+                            {
+                                foreach (var reactionGroup in message.Reactions.GroupBy(r => r.Emoji))
+                                {
+                                    <span class="reaction badge bg-secondary me-1" data-reaction="@reactionGroup.Key">
+                                        @reactionGroup.Key @reactionGroup.Count()
+                                    </span>
+                                }
+                            }
+                        </div>
+
+                        <!-- Campo para edição (escondido inicialmente) -->
+                        <textarea id="newMessageContent-@(message.Id)" class="form-control mb-1 mt-2 message-edit-area" style="display: none;">@message.Content</textarea>
+
+                        <small id="messageTimeStamp-@(message.Id)" class="fw-light" style="position: absolute; bottom: 5px; right: 10px;color: @(message.Sender.Id == userId ? "white" : "black");">@message.Timestamp.ToString("HH:mm")@((message.Edited ?? false) ? " (Editada)" : "")</small>
+
+                        <div class="d-flex align-items-center mt-2 mb-2">
+
+                            <div class="reaction-icons d-flex align-items-center position-relative">
+                                <i class="bi bi-emoji-smile me-2 add-reaction-btn" data-message-id="@message.Id" title="Emojis" style="cursor: pointer;"></i> <!-- Ícone de emoji -->
+                                <!-- Menu de reações -->
+                                <div class="ms-4 reaction-options position-absolute p-2 rounded shadow-sm bg-body border" style="display: none; z-index: 100; width: 200px;">
+                                    <div class="d-grid" style="grid-template-columns: repeat(5, 1fr); gap: 5px; text-align: center;">
+                                        <span class="reaction-option" data-reaction="😀" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">😀</span>
+                                        <span class="reaction-option" data-reaction="😂" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">😂</span>
+                                        <span class="reaction-option" data-reaction="😍" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">😍</span>
+                                        <span class="reaction-option" data-reaction="👍" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">👍</span>
+                                        <span class="reaction-option" data-reaction="👎" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">👎</span>
+                                        <span class="reaction-option" data-reaction="❤️" data-message-id="@message.Id" style="cursor: pointer; font-size:  1rem;">❤️</span>
+                                        <span class="reaction-option" data-reaction="🎉" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">🎉</span>
+                                        <span class="reaction-option" data-reaction="🔥" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">🔥</span>
+                                        <span class="reaction-option" data-reaction="👀" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">👀</span>
+                                        <span class="reaction-option" data-reaction="😮" data-message-id="@message.Id" style="cursor: pointer; font-size: 1rem;">😮</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <i class="bi bi-chat-left-text me-2 reply-message-btn" data-message-id="@message.Id" style="cursor: pointer;" title="Responder" data-message-content="@message.Content"></i>
+                            <i id="saveBtn-@(message.Id)" class="bi bi-save me-2 save-message-btn" style="cursor: pointer;display: none;" title="Guardar" data-message-id="@message.Id"></i> <!-- Ícone de save -->
+                            @if (message.Sender.Id == userId)
+                            {
+                                <i class="bi bi-pencil-square me-2 edit-message-btn" data-message-id="@message.Id" title="Editar" style="cursor: pointer;"></i> <!-- Ícone de edição -->
+                                <i class="bi bi-trash" data-bs-toggle="modal" data-bs-target="#deleteModal-@(message.Id)" title="Eliminar" style="cursor: pointer;"></i> <!-- Ícone de remoção -->
+                            }
+                        </div>
+                        <div class="modal fade" id="deleteModal-@(message.Id)" tabindex="-1">
+                            <div class="modal-dialog" style="color: var(--bs-body-color);">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar a exclusão</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Tem a certeza que deseja remover esta mensagem?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="button" class="btn btn-danger delete-message-btn" data-message-id="@message.Id" title="Eliminar" id="confirmDeleteBtn">Remover</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+
+            }
+        </div>
+        
+        <div id="typingIndicator" class="text-muted ps-3 mb-2" style="display: none; font-style: italic;">
+            Utilizador @(receiverUserName) está a digitar...
+        </div>
+
+        <form id="sendMessageForm" method="post" asp-action="SendMessage" asp-controller="Chats" enctype="multipart/form-data"
+              data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#chat-container-div"
+              data-ajax-loading="#waitChat" data-ajax-begin="hideChat();updateLastMessage('@Model.UserId');updateUnreadMessages('@Model.UserId');" data-ajax-complete="showChat();scrollToBottom();">
+
+            <div id="replyArea" class="mb-2 p-2 rounded" style="display: none; background-color: #f8f9fa; border: 1px solid #dee2e6; color: #6c757d;">
+                <small id="replyText">Respondendo a:</small>
+                <span id="replyMessageContent" class="fw-bold"></span>
+                <button type="button" class="btn-close" aria-label="Fechar" style="float: right;"></button>
+            </div>
+
+            <div class="input-group">
+                <input type="hidden" name="receiverId" value="@Model.UserId" />
+                <input type="hidden" id="replyToInput" name="replyToMessageId" value="" />
+                <input type="file" id="fileInput" name="file" style="display: none;" onchange="fileSubmitted()" />
+
+                <input type="text" id="messageInput" name="message" class="form-control me-2 rounded" placeholder="Escreva uma mensagem..." required />
+
+                <label for="fileInput" id="fileLabel" class="btn btn-outline-secondary border me-2 rounded" title="Submeter Ficheiro" style="cursor: pointer;">
+                    <i id ="fileIcon" class="bi bi-paperclip" style="font-size: 1.2rem;"></i>
+                </label>
+
+                <div class="emoji-container position-relative">
+                    <button type="button" class="btn btn-outline-secondary border me-2 emoji-trigger" title="Emojis">
+                        <i class="bi bi-emoji-smile" style="cursor: pointer; font-size: 1.2rem;"></i>
+                    </button>
+
+                    <!-- Menu de emojis -->
+                    <div class="reaction-options-input position-absolute p-2 bg-body mt-2 rounded border shadow-sm" style="display: none; z-index: 100;">
+                        <div class="d-grid" style="grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                            <span class="reaction-option-input" data-reaction="😀" style="cursor: pointer; font-size: 1.5rem;">😀</span>
+                            <span class="reaction-option-input" data-reaction="😂" style="cursor: pointer; font-size: 1.5rem;">😂</span>
+                            <span class="reaction-option-input" data-reaction="😍" style="cursor: pointer; font-size: 1.5rem;">😍</span>
+                            <span class="reaction-option-input" data-reaction="👍" style="cursor: pointer; font-size: 1.5rem;">👍</span>
+                            <span class="reaction-option-input" data-reaction="👎" style="cursor: pointer; font-size: 1.5rem;">👎</span>
+                            <span class="reaction-option-input" data-reaction="❤️" style="cursor: pointer; font-size: 1.5rem;">❤️</span>
+                            <span class="reaction-option-input" data-reaction="🎉" style="cursor: pointer; font-size: 1.5rem;">🎉</span>
+                            <span class="reaction-option-input" data-reaction="🔥" style="cursor: pointer; font-size: 1.5rem;">🔥</span>
+                            <span class="reaction-option-input" data-reaction="👀" style="cursor: pointer; font-size: 1.5rem;">👀</span>
+                            <span class="reaction-option-input" data-reaction="😮" style="cursor: pointer; font-size: 1.5rem;">😮</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary rounded" id="sendMessageBtn" title="Enviar Mensagem">
+                    <i class="bi bi-send" style="font-size: 1.2rem;"></i>
+                </button>
+            </div>
+        </form>
+
+
+        <script>
+
+            var callFrame = null; // Inicializa apenas se não estiver definido
+            var totalSeconds = 0; // Inicializa apenas se não estiver definido
+            var timerInterval = null; // Inicializa apenas se não estiver definido
+            var typingIndicator = document.getElementById("typingIndicator")
+            var messageInput = document.getElementById("messageInput");
+            var messagesList1 = document.getElementById("messagesList");
+            var loadMoreButton = document.getElementById('loadMoreButton');
+            var typingTimeout;
+
+
+            window.addEventListener('beforeunload', function (event) {
+                // Envia o fetch para encerrar a chamada
+
+                //console.log('Evento beforeunload disparado');
+
+                fetchForCloseCall('@(receiverId)');
+
+                event.preventDefault();
+                event.returnValue = ''; // Necessário para exibir uma mensagem padrão no navegador
+                
+            });
+
+            function showImg(idDiv) {
+                var div = document.getElementById(idDiv);
+                div.style.display = div.style.display === "none" ? "block" : "none";
+            }
+
+            function fileSubmitted() {
+                const fileInput = document.getElementById('fileInput');
+                const fileLabel = document.getElementById('fileLabel');
+                const fileIcon = document.getElementById('fileIcon');
+
+                if (fileInput.files.length > 0) {
+                    const fileName = fileInput.files[0].name; // Obtém o nome do ficheiro
+                    // Alterar estilo do botão
+                    //fileLabel.classList.remove('btn-outline-secondary');
+                    //fileLabel.classList.add('btn-secondary');
+                    fileLabel.title = `Ficheiro '${fileName}' enviado.`;
+                    // Alterar ícone
+                    fileIcon.classList.remove('bi-paperclip');
+                    fileIcon.classList.add('bi-check');
+                }
+            }
+
+
+            async function startVideoCall(goingToInitialSender = false) {
+                const callContainer = document.getElementById('callContainer');
+                const messagesDiv = document.getElementById('messagesList');
+                const sendMessageDiv = document.getElementById('sendMessageForm');
+                const inCallDiv = document.getElementById('inCallDiv');
+                const makeACallDiv = document.getElementById('makeACallDiv');
+                const callTimerElement = document.getElementById('callTimer');
+
+                totalSeconds = 0;
+                callTimerElement.textContent = "Chamada - 00:00";
+
+                // Verifica se já existe uma instância do callFrame
+                if (callFrame) {
+                    console.log('Destruindo instância anterior do DailyIframe.');
+                    callFrame.destroy(); // Destroi a instância anterior
+                    callFrame = null; // Garante que podemos criar uma nova instância
+                }
+
+                //console.log(userLanguage);
+
+                callFrame = Daily.createFrame(callContainer,{
+                    iframeStyle: {
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '5px'
+                    },
+                    showLeaveButton: false,       // Esconde o botão "Sair"
+                    showFullscreenButton: false,
+                    lang: userLanguage,
+                    showParticipantsBar: false
+                });
+
+                callFrame.setUserName('@(senderUserName)');
+
+                inCallDiv.classList.toggle("d-none");
+                inCallDiv.classList.toggle("d-flex");
+
+                makeACallDiv.classList.toggle("d-flex");
+                makeACallDiv.classList.toggle("d-none");
+
+
+                var urlRoom = null;
+
+                try {
+                    const response = await fetch('/Chats/GetRoomInfo', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ receiverUserId: '@(receiverId)', senderUserId: '@(userId)' })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        console.log("Sala pronta:", data.roomUrl);
+                        urlRoom = data.roomUrl;
+                    } else {
+                        console.error('Erro:', data.message);
+                        if (urlRoom == null) {
+                            urlRoom = 'https://bertrund.daily.co/salafixe';
+                        }
+                    }
+                    // Carrega a chamada no iframe
+                    callFrame.join({
+                        url: urlRoom, // Substitua com a sua sala
+                        audioSource: true,
+                        videoSource: true,
+                    });
+
+                    // Define o intervalo para executar a cada 1 segundo (1000 ms).
+                    timerInterval = setInterval(() => {
+                        totalSeconds++;
+
+                        // Converte para minutos e segundos.
+                        const minutes = Math.floor(totalSeconds / 60);
+                        const seconds = totalSeconds % 60;
+
+                        // Formata os valores (02 dígitos).
+                        const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                        // Altera o texto do elemento.
+                        callTimerElement.textContent = `Chamada - ${timeFormatted}`;
+                    }, 1000);
+
+                    fetch('/Chats/SendCallRequest', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ReceiverUserId: '@(receiverId)', SenderUserId: '@(userId)' })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data.message); // Notificação enviada com sucesso
+                        })
+                        .catch(error => console.error('Erro ao enviar chamada:', error));
+
+                    callContainer.style.display = 'block';
+                    messagesDiv.style.display = 'none';
+                    sendMessageDiv.style.display = 'none';
+                } catch (error) {
+                    console.error('Erro ao obter a sala:', error);
+                }
+
+                // Configura o evento "left-meeting"
+                /*callFrame.on('left-meeting', () => {
+                    closeCall(); // Chamamos o método para fechar o contêiner
+                });*/
+
+                // Mostra o contêiner da chamada
+            }
+
+            function closeCall() {
+                const callContainer = document.getElementById('callContainer');
+                const messagesDiv = document.getElementById('messagesList');
+                const sendMessageDiv = document.getElementById('sendMessageForm');
+                const inCallDiv = document.getElementById('inCallDiv');
+                const makeACallDiv = document.getElementById('makeACallDiv');
+                const callTimerElement = document.getElementById('callTimer');
+
+                // Verifica se há uma instância ativa do callFrame
+                if (callFrame) {
+                    callFrame.leave().then(() => {
+                        //console.log('Utilizador saiu da chamada.');
+                        callFrame.destroy(); // Destroi a instância do callFrame
+                        callFrame = null; // Reseta a referência
+                    }).catch((err) => {
+                        console.error('Erro ao sair da chamada:', err);
+                    });
+                }
+
+                // Esconde o contêiner e exibe os elementos de mensagens
+                callContainer.style.display = 'none';
+                messagesDiv.style.display = 'block';
+                sendMessageDiv.style.display = 'block';
+
+                // Esconde o contêiner e exibe os elementos de mensagens
+                inCallDiv.classList.toggle("d-flex");
+                inCallDiv.classList.toggle("d-none");
+
+                setTimeout(() => {
+                    makeACallDiv.classList.toggle("d-none");
+                    makeACallDiv.classList.toggle("d-flex");
+                }, 1000);
+
+                fetch('/Chats/EndCall', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ReceiverUserId: '@(receiverId)', SenderUserId: '@(userId)' })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        //console.log(data.message); // Notificação enviada com sucesso
+                    })
+                    .catch(error => console.error('Erro ao terminar chamada:', error));
+
+                // 2. Para o cronômetro (clearInterval)
+                if (timerInterval != null) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                callTimerElement.textContent = "Chamada - 00:00";
+                totalSeconds = 0;
+            }
+
+            messagesList1.addEventListener("scroll", function () {
+                const isAtBottom = Math.abs(messagesList1.scrollHeight - messagesList1.scrollTop - messagesList1.clientHeight) <= 0;
+
+                if (messagesList1.scrollTop <= 0) { // Quando o utilizador chega ao topo
+                    const currentPage = @(Model.CurrentPage); // Valor renderizado pelo Razor
+                    if (currentPage > 0) { // Garantir que `currentPage` é válido
+                        const scrollHeightBeforeLoad = messagesList1.scrollHeight;
+
+                        //console.log("Altura antes de carregar mais mensagens:", scrollHeightBeforeLoad);
+
+                        loadMoreButton.click(); // Simula o carregamento de mais mensagens
+
+                        setTimeout(() => { // Aguarda o carregamento para ajustar a posição do scroll
+                            const scrollHeightAfterLoad = messagesList1.scrollHeight;
+                            messagesList1.scrollTop = scrollHeightAfterLoad - scrollHeightBeforeLoad;
+                            //console.log("Altura depois de carregar:", scrollHeightAfterLoad);
+                        }, 50); // Ajuste o tempo conforme necessário
+                    } else {
+                        console.error("CurrentPage inválido ou igual a zero.");
+                    }
+                }
+
+                if (isAtBottom) {
+                    console.log("Utilizador chegou ao fundo da lista.");
+                    updateUnreadMessages('@(receiverId)'); // Atualiza mensagens lidas
+                }
+            });
+
+
+
+            // Detecta quando o user começa a digitar
+            messageInput.addEventListener("input", () => {
+                // Envia um evento para o servidor dizendo que o usuário está digitando
+                sendTypingNotification();
+
+                // Cancela o timeout existente e define um novo para remover o status "digitando"
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    stopTypingNotification();
+                }, 2000); // Após 2 segundos sem digitar
+            });
+
+            function sendTypingNotification() {
+                // Enviar notificação para o servidor via fetch
+                fetch('/Chats/StartTyping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderId: '@(userId)', receiverId: '@(receiverId)'
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('Notificação de digitando enviada.');
+                        } else {
+                            console.error('Erro ao enviar notificação de digitando.');
+                        }
+                    })
+                    .catch(error => console.error('Erro:', error));
+            }
+
+            function stopTypingNotification(senderId, receiverId) {
+                // Enviar notificação para o servidor via fetch
+                fetch('/Chats/StopTyping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderId: '@(userId)', receiverId: '@(receiverId)'
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('Notificação de parar de digitar enviada.');
+                        } else {
+                            console.error('Erro ao enviar notificação de parar de digitar.');
+                        }
+                    })
+                    .catch(error => console.error('Erro:', error));
+            }
+
+
+            document.querySelector(".emoji-trigger").addEventListener("click", function () {
+                const reactionOptions = document.querySelector(".reaction-options-input");
+                //console.log(reactionOptions);
+                if (reactionOptions.style.display === "none" || reactionOptions.style.display === "") {
+                    reactionOptions.style.display = "block";
+                } else {
+                    reactionOptions.style.display = "none";
+                }
+            });
+
+            // Adicionar emoji ao campo de entrada
+            document.querySelectorAll(".reaction-option-input").forEach(option => {
+                option.addEventListener("click", function () {
+                    const reactionOptions = document.querySelector(".reaction-options-input");
+                    const emoji = this.dataset.reaction; // Obter o emoji clicado
+                    const messageInput = document.getElementById("messageInput");
+
+                    // Adicionar o emoji ao texto existente no campo
+                    messageInput.value += emoji;
+
+                    // Esconder a lista de emojis após a seleção
+                    document.querySelector(".reaction-options").style.display = "none";
+
+                    // Focar no campo de entrada
+                    messageInput.focus();
+
+                    reactionOptions.style.display = "none";
+                });
+            });
+
+            document.querySelectorAll(".edit-message-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    const messageId = this.dataset.messageId;
+                    const messageDiv = this.closest(".p-3");
+                    const contentParagraph = messageDiv.querySelector(".message-content");
+                    const editTextarea = messageDiv.querySelector(".message-edit-area");
+                    const saveButton = messageDiv.querySelector(".save-message-btn");
+
+                    // Mostrar textarea e botão de guardar
+                    contentParagraph.style.display = "none";
+                    editTextarea.style.display = "block";
+                    saveButton.style.display = "inline-block";
+                    this.style.display = "none"; // Esconder o botão de editar
+                });
+            });
+
+            document.querySelectorAll('.add-reaction-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const options = this.nextElementSibling;
+                    options.style.display = options.style.display === "block" ? "none" : "block";
+                });
+            });
+
+            // Enviar reação ao servidor
+            document.querySelectorAll('.reaction-option').forEach(option => {
+                option.addEventListener('click', function () {
+                    const messageId = this.dataset.messageId;
+                    const emoji = this.dataset.reaction;
+                    const reactionContainer = document.querySelector(`#message-${messageId} .reactions`);
+                    const reactionOptionsDiv = document.querySelector(`#message-${messageId} .reaction-icons .reaction-options`);
+                    console.log(reactionOptionsDiv);
+                    const existingReaction = reactionContainer?.querySelector(`.reaction[data-reaction="${emoji}"]`);
+
+                    // Define a URL e o método (adicionar ou remover reação)
+                    const url = '/Chats/UpdateReaction';
+                    const method = 'POST';
+
+                    // Envia a solicitação ao servidor
+                    fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ messageId, emoji, userId: '@(userId)' }) // Substitua pelo ID do usuário atual
+                    })
+                        .then(response => response.json())
+                        .then(reactions => {
+                            // Atualizar o DOM com as reações atualizadas
+                            if (reactionContainer) {
+                                reactionContainer.innerHTML = ''; // Limpa as reações antigas
+
+                                for (const [emoji, count] of Object.entries(reactions)) {
+                                    const reactionSpan = document.createElement('span');
+                                    reactionSpan.className = 'reaction badge bg-secondary me-1';
+                                    reactionSpan.setAttribute('data-reaction', emoji);
+                                    reactionSpan.textContent = `${emoji} ${count}`;
+                                    reactionContainer.appendChild(reactionSpan);
+                                }
+                                reactionOptionsDiv.style.display = "none";
+                            }
+                        })
+                        .catch(error => console.error('Erro ao processar a reação:', error));
+                });
+            });
+
+
+
+            // Função para guardar as alterações
+            document.querySelectorAll(".save-message-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    const messageId = this.dataset.messageId;
+                    //console.log(messageId);
+                    const timestampElement = document.querySelector(`#messageTimeStamp-${messageId}`);
+                    const messageDiv = document.getElementById(`message-${messageId}`);
+                    //console.log(messageDiv);
+                    const contentParagraph = messageDiv.querySelector(".message-content");
+                    const editTextarea = messageDiv.querySelector(".message-edit-area");
+                    const editButton = messageDiv.querySelector(".edit-message-btn");
+
+                    const newContent = editTextarea.value.trim(); // Remover espaços em branco no início e fim
+
+                    // Verificar se o conteúdo da mensagem é vazio
+                    if (!newContent) {
+                        // Adicionar um erro visual à textarea
+                        editTextarea.classList.add("is-invalid");
+
+                        // Verificar se já existe um alerta; caso contrário, adicionar um
+                        if (!messageDiv.querySelector(".error-message")) {
+                            const errorMessage = document.createElement("div");
+                            errorMessage.textContent = "A mensagem não pode estar vazia.";
+                            errorMessage.classList.add("error-message", "text-danger", "mt-2");
+                            editTextarea.after(errorMessage); // Adicionar o alerta abaixo da textarea
+                        }
+
+                        return;
+                    }
+
+                    // Se o conteúdo for válido, remover erros
+                    editTextarea.classList.remove("is-invalid");
+                    const errorMessage = messageDiv.querySelector(".error-message");
+                    if (errorMessage) {
+                        errorMessage.remove();
+                    }
+
+                    console.log("id message : " + messageId);
+
+                    // Enviar para o servidor
+                    fetch(`/Chats/EditMessage/`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({ messageId: parseInt(messageId, 10), newContent })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+
+                                // Atualizar o conteúdo e voltar ao modo de visualização
+                                contentParagraph.textContent = newContent;
+                                contentParagraph.style.display = "block";
+                                editTextarea.style.display = "none";
+                                this.style.display = "none"; // Esconder o botão de guardar
+                                editButton.style.display = "inline-block"; // Mostrar o botão de editar
+
+                                //console.log(timestampElement.textContent);
+                                //para verificar se ja nao foi editada
+                                if (!timestampElement.textContent.includes("(Editada)")) {
+                                    timestampElement.textContent = timestampElement.textContent + " (Editada)";
+                                }
+
+
+                            } else {
+                                alert("Erro ao guardar as alterações.");
+                            }
+                        });
+                });
+            });
+
+            document.querySelectorAll(".reply-message-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    const messageId = this.dataset.messageId; // Obter o ID da mensagem
+                    const messagesList = document.getElementById("messagesList");
+                    const messageContent = this.dataset.messageContent; // Obter o conteúdo da mensagem
+
+                    // Mostrar a área de resposta
+                    const replyArea = document.getElementById("replyArea");
+                    const replyMessageContent = document.getElementById("replyMessageContent");
+                    const replyToInput = document.getElementById("replyToInput");
+
+                    replyArea.style.display = "block"; // Tornar visível
+                    replyMessageContent.textContent = ` ${messageContent}`; // Inserir o texto da mensagem
+                    replyToInput.value = messageId; // Guardar o ID da mensagem original
+
+                    const replyAreaHeight = replyArea.offsetHeight;
+                    messagesList.style.height = `calc(100% - 155px - ${replyAreaHeight}px)`;
+
+
+                    // Botão de fechar
+                    const closeButton = replyArea.querySelector(".btn-close");
+                    closeButton.addEventListener("click", function () {
+                        replyArea.style.display = "none"; // Esconder a área de resposta
+                        replyMessageContent.textContent = ""; // Limpar o texto
+                        replyToInput.value = ""; // Limpar o ID
+
+                        messagesList.style.height = "calc(100% - 155px)";
+                    });
+                });
+            });
+
+
+            document.querySelectorAll(".delete-message-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    const messageId = this.dataset.messageId; // Obter o ID da mensagem
+                    const messageDiv = document.getElementById(`message-${messageId}`); // Obter o elemento da mensagem
+                    const deleteModal = document.getElementById(`deleteModal-${messageId}`); // Obter o elemento da mensagem
+
+                    // Confirmar a exclusão
+                    //if (!confirm("Tem a certeza que deseja remover esta mensagem?")) {
+                    //    return;
+                    //}
+
+                    // Enviar a solicitação ao servidor
+                    fetch(`/Chats/DeleteMessage/`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({ messageId: parseInt(messageId, 10) })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remover a mensagem do DOM
+                            messageDiv.remove();
+
+                            console.log("last message: ", data.lastMessageSent);
+
+                            const lastMessageElement = document.querySelector("#lastMessageUser-" + '@(receiverId)');
+                            //console.log("lastMessageEl:" + lastMessageElement);
+                            if (lastMessageElement) {
+                                //console.log(message);
+                                if (data.lastMessageSent.length > 33) {
+                                    // Trunca a string para 33 caracteres e adiciona "..."
+                                    lastMessageElement.textContent = data.lastMessageSent.substring(0, 33) + "...";
+                                } else {
+                                    // Se não, exibe a mensagem inteira
+                                    lastMessageElement.textContent = data.lastMessageSent;
+                                }
+                            }
+
+                        } else {
+                            alert("Erro ao remover a mensagem.");
+                        }
+                        const modalInstance = bootstrap.Modal.getInstance(deleteModal);
+                        modalInstance.hide();
+                    })
+                    .catch(error => {
+                        console.error("Erro ao remover a mensagem:", error);
+                        alert("Erro ao remover a mensagem.");
+                    });
+                });
+            });
+
+
+            function updateLastMessage(receiverId) {
+                // Oculta a div que contém a grid de Categorias
+                const userLink = document.querySelector(`a[data-user-id="${receiverId}"]`);
+                var message = document.getElementById("messageInput").value;
+
+                console.log("userlink: " + userLink);
+                console.log("message: " + message);
+
+                if (userLink != null) {
+                    // Encontrar o elemento <small> com id="lastMessageUser" dentro do <a>
+                    const lastMessageElement = document.getElementById("lastMessageUser-" + receiverId);
+                    console.log("lastMessageElement: " + lastMessageElement);
+
+                    if (lastMessageElement) {
+                        lastMessageElement.textContent = message;
+                    }
+                }
+            }
+            function scrollToBottom() {
+                const messagesList = document.getElementById("messagesList");
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+
+
+        </script>
+    }
+</div>
+
+
+<style>
+    .reactions {
+        margin-top: 10px;
+    }
+
+    .reaction {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 14px;
+    }
+
+    .reaction-option {
+        cursor: pointer;
+        font-size: 20px;
+        margin-right: 5px;
+    }
+
+    .reaction-options {
+        display: flex;
+        gap: 5px;
+        margin-top: 5px;
+    }
+
+   
+
+
+</style>

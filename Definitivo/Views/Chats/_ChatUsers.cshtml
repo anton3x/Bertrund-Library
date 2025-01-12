@@ -1,0 +1,163 @@
+﻿@model IEnumerable<Definitivo.Models.ChatsViewModel>
+@using System.Security.Claims
+
+@{
+    var userId = User.Identity.IsAuthenticated ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
+}
+
+<ul class="list-unstyled overflow-auto" id="listaUtilizadores" style="height: 50vh;">
+    @foreach (var user in Model)
+    {
+        <li class="p-2 border-bottom">
+            <a asp-action="OpenChat" asp-controller="Chats" data-user-id="@user.UserId" onclick="updateUnreadMessages('@user.UserId');fetchForCloseCall('@user.UserId');" id="openChat-@(user.UserId)"
+               class="text-decoration-none d-flex align-items-center" asp-route-userId="@user.UserId"
+               data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#chat-container-div"
+               data-ajax-loading="#waitChat" data-ajax-begin="hideChat();" data-ajax-complete="showChat();scrollToBottom();">
+
+                <div class="me-3 position-relative">
+                    <img src="~/Images/Users/@user.UserImage" class="rounded-circle" width="40" height="40" />
+                    @if (user.online)
+                    {
+                        <span id="online-indicator-@user.UserId" class="position-absolute bottom-0 end-0 translate-middle p-1 bg-success border border-light rounded-circle"
+                              style="width: 10px; height: 10px;">
+                        </span>
+                    }
+                    else
+                    {
+                        <span id="online-indicator-@user.UserId" class="position-absolute bottom-0 end-0 translate-middle p-1 bg-secondary border border-light rounded-circle"
+                              style="width: 10px; height: 10px;">
+                        </span>
+
+                    }
+                </div>
+
+                <div class="w-100">
+                    <strong>@user.UserName</strong>
+                    <br />
+                    @if (user.onCall)
+                    {
+                        <small class="text-info d-flex align-items-center" id="isOnCall-@user.UserId">
+                            <i class="bi bi-telephone-fill text-info me-1"></i> Em chamada
+                        </small>
+                        <small class="d-none text-muted" id="lastMessageUser-@user.UserId">
+                            @(user.LastMessage.Length > 33 ? user.LastMessage.Substring(0, 33) + "..." : user.LastMessage)
+                        </small>
+                    }
+                    else
+                    {
+                        <small class="text-info d-none align-items-center" id="isOnCall-@user.UserId">
+                            <i class="bi bi-telephone-fill text-info me-1"></i> Em chamada
+                        </small>
+                        <small class="text-muted" id="lastMessageUser-@user.UserId">
+                            @(user.LastMessage.Length > 33 ? user.LastMessage.Substring(0, 33) + "..." : user.LastMessage)
+                        </small>
+                    }
+                </div>
+
+                <!-- Terceira Div -->
+                @if (user.UnreadMessages > 0)
+                {
+                    <div class="end-0">
+                        <span id="contadorMensagensNaoLidas-@user.UserId" class="badge bg-danger">@user.UnreadMessages</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="end-0">
+                        <span id="contadorMensagensNaoLidas-@user.UserId" class="d-none badge bg-danger">0</span>
+                    </div>
+                }
+            </a>
+        </li>
+    }
+    <li class="d-none">
+        <form method="get" data-ajax="true" data-ajax-method="get" data-ajax-mode="replace"
+              data-ajax-update="#listaUtilizadores" data-ajax-loading="#waitChatUsers"
+              data-ajax-begin="hideUsers();" data-ajax-complete="showUsers();"
+              asp-action="ChatUsers" asp-controller="Chats">
+            <input type="hidden" name="page" value="@(ViewBag.CurrentPage + 1)" />
+            <input type="hidden" name="userId" value="@(userId)" />
+            <button type="submit" class="btn btn-outline-primary" id="loadMoreUsersButton">Carregar Mais</button>
+        </form>
+    </li>
+</ul>
+
+<script>
+
+
+    function fetchForCloseCall(receiverId) {
+        fetch('/Chats/EndCall', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ReceiverUserId: receiverId, SenderUserId: '@(userId)' })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message); // Notificação enviada com sucesso
+            })
+            .catch(error => console.error('Erro ao terminar chamada:', error));
+    }
+
+
+    var listaUsers = document.getElementById("listaUtilizadores");
+
+    function hideUsers() {
+
+        // Oculta a div que contém a grid de Categorias
+        if (listaUsers) {
+            listaUsers.style.display = 'none';
+        } else {
+            //console.warn("Elemento 'listaUsers' não encontrado.");
+        }
+
+        if (waitChatUsers) {
+            waitChatUsers.classList.add('d-flex'); // Adiciona a classe 'd-flex'
+            waitChatUsers.style.display = 'block'; // Garante que o elemento está visível
+        } else {
+            //console.warn("Elemento 'waitChatUsers' não encontrado.");
+        }
+    }
+
+    function showUsers() {
+
+        // Exibe novamente a div que contém a grid de Categorias
+        if (listaUsers) {
+            listaUsers.style.display = 'block';
+        } else {
+            //console.warn("Elemento 'listaUtilizadores' não encontrado.");
+        }
+
+        if (waitChatUsers) {
+            waitChatUsers.classList.remove('d-flex'); // Remove a classe 'd-flex'
+            waitChatUsers.style.display = 'none'; // Esconde o elemento
+        } else {
+            //console.warn("Elemento 'waitChatUsers' não encontrado.");
+        }
+
+    }
+
+    listaUsers.addEventListener("scroll", function () {
+        const isAtBottom = Math.abs(listaUsers.scrollHeight - listaUsers.scrollTop - listaUsers.clientHeight) <= 0;
+
+        if (isAtBottom) { // Quando o utilizador chega ao topo
+            const currentPage = @(ViewBag.CurrentPage); // Valor renderizado pelo Razor
+            if (currentPage > 0) { // Garantir que `currentPage` é válido
+                const scrollHeightBeforeLoad = listaUsers.scrollHeight;
+
+                console.log("Altura antes de carregar mais users:", scrollHeightBeforeLoad);
+
+                loadMoreUsersButton.click(); // Simula o carregamento de mais mensagens
+
+                setTimeout(() => { // Aguarda o carregamento para ajustar a posição do scroll
+                    const scrollHeightAfterLoad = listaUsers.scrollHeight;
+                    listaUsers.scrollTop = scrollHeightAfterLoad - scrollHeightBeforeLoad;
+                    console.log("Altura depois de carregar:", scrollHeightAfterLoad);
+                }, 50); // Ajuste o tempo conforme necessário
+            } else {
+                console.error("CurrentPage inválido ou igual a zero.");
+            }
+        }
+    });
+</script>

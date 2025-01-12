@@ -1,0 +1,186 @@
+﻿@page
+@model EnableAuthenticatorModel
+@{
+    ViewData["Title"] = "Configurar aplicação de autenticação";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="container mt-4 mb-2">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <h3 class="card-title mb-4">@ViewData["Title"]</h3>
+
+            <div class="steps-container mb-2">
+                <div class="step mb-4">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h5 class="mb-3">Descarregue uma aplicação de autenticação</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="app-option p-3 border rounded">
+                                    <h6>Microsoft Authenticator</h6>
+                                    <div class="mt-2">
+                                        <a href="https://go.microsoft.com/fwlink/?Linkid=825072" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-android2"></i> Android
+                                        </a>
+                                        <a href="https://go.microsoft.com/fwlink/?Linkid=825073" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-apple"></i> iOS
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="app-option p-3 border rounded">
+                                    <h6>Google Authenticator</h6>
+                                    <div class="mt-2">
+                                        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-android2"></i> Android
+                                        </a>
+                                        <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-apple"></i> iOS
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step mb-4">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h5 class="mb-3">Configure a autenticação</h5>
+                        <div class="row align-items-center">
+                            <div class="col-md-6 text-center mb-3">
+
+                                <div id="qrCode" class="qr-container p-3 border rounded bg-light"></div>
+                                <div id="qrCodeData" data-url="@Model.AuthenticatorUri" class="d-none"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="key-container p-3 border rounded">
+                                    <p class="mb-2">Ou introduza esta chave manualmente:</p>
+                                    <kbd class="d-block p-2 bg-dark text-light">@Model.SharedKey</kbd>
+                                    <small class="text-muted">Os espaços e maiúsculas/minúsculas não são relevantes</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step mb-2">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h5 class="mb-3">Verifique a configuração</h5>
+                        <form id="send-code" method="post" class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="Input.Code" class="form-control" autocomplete="off" placeholder="Introduza o código" />
+                                <label asp-for="Input.Code">Código de Verificação</label>
+                                <span asp-validation-for="Input.Code" class="text-danger"></span>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-shield-check"></i> Verificar Código
+                            </button>
+                            <div asp-validation-summary="ModelOnly" class="text-danger mt-3" role="alert"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script type="text/javascript" src="~/lib/qrcode.js"></script>
+    <script type="text/javascript" src="~/js/qr.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uri = document.getElementById("qrCodeData").getAttribute('data-url');
+            new QRCode(document.getElementById("qrCode"),
+                {
+                    text: uri,
+                    width: 150,
+                    height: 150
+                });
+        });
+    </script>
+
+}
+<style>
+    .steps-container {
+        position: relative;
+    }
+
+    .step {
+        position: relative;
+        padding-left: 3rem;
+    }
+
+    .step-number {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2rem;
+        height: 2rem;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .step-content {
+        padding-left: 1rem;
+    }
+
+    .app-option {
+        transition: all 0.3s ease;
+    }
+
+    [data-bs-theme="dark"] .app-option {
+        background-color: #2b3035;
+    }
+
+    [data-bs-theme="light"] .app-option {
+        background-color: #f8f9fa;
+    }
+
+        .app-option:hover {
+            transform: translateY(-2px);
+        }
+
+        
+
+    .qr-container {
+        display: inline-block;
+        padding: 1rem;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .key-container {
+        border-radius: 0.5rem;
+    }
+
+    [data-bs-theme="dark"] .key-container {
+        background-color: #2b3035;
+    }
+
+    [data-bs-theme="light"] .key-container {
+        background: #f8f9fa;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+</style>

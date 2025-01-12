@@ -1,0 +1,88 @@
+﻿@page
+@model ResendEmailConfirmationModel
+@{
+    ViewData["Title"] = "Reenviar confirmação de email";
+}
+
+@if (TempData["Message"] != null)
+{
+	<div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+		@if (TempData["Message"].ToString().StartsWith("Success:"))
+		{
+			<div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+				<div class="toast-header bg-success text-white">
+					<strong class="me-auto">Sucesso</strong>
+					<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+				</div>
+				<div class="toast-body">
+					@TempData["Message"].ToString().Substring(8) <!-- Remove "Success:" -->
+				</div>
+			</div>
+		}
+		@if (TempData["Message"].ToString().StartsWith("Error:"))
+		{
+			<div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+				<div class="toast-header bg-danger text-white">
+					<strong class="me-auto">Erro</strong>
+					<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+				</div>
+				<div class="toast-body">
+					@TempData["Message"].ToString().Substring(6) <!-- Remove "Error:" -->
+				</div>
+			</div>
+		}
+	</div>
+
+	<!-- Código JavaScript para exibir o Toast -->
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			var successToast = document.getElementById('successToast');
+			var errorToast = document.getElementById('errorToast');
+
+			// Exibe o Toast de Sucesso se ele estiver presente
+			if (successToast) {
+				var toastSuccess = new bootstrap.Toast(successToast);
+				toastSuccess.show(); // Exibe o Toast de sucesso
+			}
+
+			// Exibe o Toast de Erro se ele estiver presente
+			if (errorToast) {
+				var toastError = new bootstrap.Toast(errorToast);
+				toastError.show(); // Exibe o Toast de erro
+			}
+		});
+	</script>
+
+}
+
+<div class="d-flex align-items-center justify-content-center" style="height: 70vh;">
+	<div class="card shadow-lg rounded w-100 px-3" style="max-width: 600px;">
+		<div class="card-body text-center">
+			<h1 class="card-title mb-4">@ViewData["Title"]</h1>
+			<h5 class="text-muted mb-4">Digite o seu email para reenviar a confirmação</h5>
+			<hr/>
+			<form method="post">
+				@*<div asp-validation-summary="All" class="text-danger" role="alert"></div>*@
+
+				<!-- Campo de Email -->
+				<div class="form-floating mb-3">
+					<input asp-for="Input.Email" class="form-control" id="email" aria-required="true" placeholder="nome@exemplo.com"/>
+					<label for="email">Email</label>
+					<span asp-validation-for="Input.Email" class="text-danger"></span>
+				</div>
+
+				<!-- Botão para reenviar -->
+				<button type="submit" class="w-100 btn btn-lg btn-primary">Reenviar</button>
+			</form>
+
+			<!-- Link para login -->
+			<div class="mt-4">
+				<p class="text-muted">Já tem uma conta? <a asp-page="./Login" class="text-primary text-decoration-none">Faça login</a></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

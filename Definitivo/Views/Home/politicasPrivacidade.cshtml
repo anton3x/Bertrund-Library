@@ -1,0 +1,495 @@
+﻿@using System.Text.RegularExpressions
+@model PoliticaPrivacidadeModel
+
+@if (User.IsInRole("Admin"))
+{
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-4 mb-4">Política de Privacidade</h1>
+            <div class="d-flex justify-content-center gap-2">
+                <button id="addTopicButton" class="btn btn-outline-secondary d-none">
+                    <i class="bi bi-plus-circle"></i> Adicionar Tópico
+                </button>
+                <button id="editButton" class="btn btn-primary">
+                    <i class="bi bi-pencil-square"></i> Editar
+                </button>
+            </div>
+        </div>
+        <p class="text-right ms-1 text-muted">Última modificação: @Model.dataUltimaModificacao</p>
+        <div id="topicsContainer">
+	        @foreach (var topico in Model.topicos)
+	        {
+		        <div class="card mb-4" id="topico-@topico.id">
+			        <div class="d-flex topicoCard card-header justify-content-between">
+				        <h4 data-editable="true" data-type="textarea" data-key="@($"Topico[{topico.id}].Titulo")" class="col-6 mb-0" >@topico.titulo</h4>
+				        <div class="d-flex justify-content-center gap-2">
+					        <button id="addParagrafoBtn[@(topico.id)]" type="button" class="btn btn-outline-secondary d-none" onclick="adicionarParagrafo(@topico.id, false)">
+						        <i class="bi bi-plus-circle"></i> Adicionar Parágrafo
+					        </button>
+					        <button id="addBulletPointBtn[@(topico.id)]" type="button" class="btn btn-outline-secondary d-none" onclick="adicionarBulletPoint(@topico.id, false)">
+						        <i class="bi bi-plus-circle"></i> Adicionar Bullet Point
+					        </button>
+					        <button type="button" class="btn btn-outline-danger d-none" id="remTopicoBtn[@(topico.id)]" data-bs-toggle="modal"
+					                data-bs-target="#deleteTopico-@topico.id">
+						        <i class="bi bi-trash"></i>
+					        </button>
+				        </div>
+			        </div>
+			        <div class="card-body">
+
+				        @{
+					        // Expressão regular para capturar delimitadores <p> e <b> e os conteúdos entre eles
+					        var elementos = Regex.Split(topico.conteudo, @"(<p>|<b>)")
+						        .Where(e => !string.IsNullOrWhiteSpace(e))
+						        .ToList();
+
+					        // Lista para armazenar elementos na ordem com índice e tipo
+					        var elementosComIndice = new List<(int index, string type, string content)>();
+
+					        int index = 0;
+
+					        for (int i = 0; i < elementos.Count; i++)
+					        {
+						        if (elementos[i] == "<p>")
+						        {
+							        if (i + 1 < elementos.Count && elementos[i + 1] != "<p>" && elementos[i + 1] != "<b>")
+							        {
+								        elementosComIndice.Add((index++, "paragrafo", elementos[i + 1].Trim()));
+								        i++;
+							        }
+						        }
+						        else if (elementos[i] == "<b>")
+						        {
+							        if (i + 1 < elementos.Count && elementos[i + 1] != "<p>" && elementos[i + 1] != "<b>")
+							        {
+								        elementosComIndice.Add((index++, "bullet", elementos[i + 1].Trim()));
+								        i++;
+							        }
+						        }
+					        }
+					        int paragrafoIndex = 0;
+					        int bulletIndex = 0;
+				        }
+
+				        <div id="elementos-@topico.id" class="container list-unstyled">
+					        @foreach (var item in elementosComIndice)
+					        {
+						        if (item.type == "paragrafo")
+						        {
+							        <p data-editable="true" data-type="textarea" data-key="@($"Topico[{topico.id}].Paragrafo[{paragrafoIndex++}]")" class="sortable-item my-1">
+								        @item.content
+							        </p>
+						        }
+						        else if (item.type == "bullet")
+						        {
+							        <li data-editable="true" data-type="textarea" data-key="@($"Topico[{topico.id}].Bullet[{bulletIndex++}]")" class="sortable-item d-flex align-items-start my-1 gap-2">
+								        <i class="bi bi-check-circle-fill"></i> @item.content
+							        </li>
+						        }
+					        }
+				        </div>
+ 
+			        </div>
+		        </div>
+		        <!-- Delete Modal -->
+		        <div class="modal fade" id="deleteTopico-@topico.id" tabindex="-1">
+			        <div class="modal-dialog">
+				        <div class="modal-content">
+					        <div class="modal-header">
+						        <h5 class="modal-title">Confirmar Exclusão</h5>
+						        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					        </div>
+					        <div class="modal-body">
+						        <p>Tem a certeza que deseja excluir o tópico "@(String.IsNullOrEmpty(topico.titulo) ? "Tópico Sem Título" : topico.titulo)"?</p>
+						        <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+					        </div>
+					        <div class="modal-footer">
+						        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+							        <i class="bi bi-x-lg"></i>
+							        Cancelar
+						        </button>
+						        <button type="submit" class="btn btn-danger excluirTopicoBtn" onclick="removerTopico(@topico.id, false)" >
+							        <i class="bi bi-trash"></i>
+							        Excluir
+						        </button>
+					        </div>
+				        </div>
+			        </div>
+		        </div>
+	        }
+        </div>
+        
+    </div>
+    <script>
+
+        async function removerTopico(topicoId, isNewTopic)
+        {
+            const bootstrapModal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+            const modal = bootstrap.Modal.getInstance(bootstrapModal);
+            
+            if (!isNewTopic) {
+                // Lógica para remover o tópico
+                try {
+                    // Sua lógica para remover o tópico aqui
+                    const response = await fetch(`/Home/RemoverTopicoPoliticaPrivacidade/${topicoId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                    });
+
+                    if (response.ok) {
+                        // Remove o tópico do DOM
+                        const topicoElement = document.getElementById(`topico-${topicoId}`);
+                        if (topicoElement) {
+                            topicoElement.remove();
+                            //alert("Tópico removido com sucesso!");
+                        }
+                    } else {
+                        // Tratar erros
+                        console.error('Erro ao remover o tópico:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error("Erro na requisição:", error);
+                    alert("Erro ao remover o tópico. Tente novamente.");
+                }
+            }
+            const topicoElement = document.getElementById(`topico-${topicoId}`);
+
+            if (topicoElement) {
+                topicoElement.remove();
+            } else {
+                console.error(`Tópico com ID 'topico-${topicoId}' não encontrado.`);
+            }
+            modal.hide(); // Esconde o modal após a ação
+            
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const topicos = document.querySelectorAll('[id^="topico-"]');
+            const topicsContainer = document.getElementById('topicsContainer');
+
+            topicos.forEach(topico => {
+                const topicoId = topico.id.split('-')[1];
+
+                // Inicializa Sortable para todos os elementos (parágrafos e bullets)
+                const elementosContainer = document.getElementById(`elementos-${topicoId}`);
+                if (elementosContainer) {
+                    new Sortable(elementosContainer, {
+                        group: `grupo-${topicoId}`,
+                        animation: 150,
+                        handle: '.sortable-item',
+                        ghostClass: 'sortable-ghost',
+                        onEnd: function () {
+                            //atualizarIndices(topicoId, false);
+                        }
+                    });
+                }
+            });
+
+            // Inicializar Sortable no contêiner FAQ
+            if (topicsContainer) {
+                new Sortable(topicsContainer, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost', // Classe CSS aplicada ao item enquanto está sendo arrastado
+                    handle: '.topicoCard', // Define a área para arrastar (opcional, aqui é o cabeçalho)
+                    onEnd: function (evt) {
+                        console.log(`Movido do índice ${evt.oldIndex} para o índice ${evt.newIndex}`);
+                        //atualizarOrdem();
+                    }
+                });
+            }
+        });
+
+        function inicializarSortable(topicoId) {
+            const elementosContainer = document.querySelector(`#elementos-${topicoId}`);
+
+            if (elementosContainer) {
+                new Sortable(elementosContainer, {
+                    group: `grupo-${topicoId}`,
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function () {
+                        atualizarIndices(topicoId, true);
+                    }
+                });
+            }
+        }
+
+        function atualizarIndices(topicoId, isNewTopic) {
+            const elementos = document.querySelectorAll(`#elementos-${topicoId} .sortable-item`);
+
+            let paragrafoIndex = 0;
+            let bulletIndex = 0;
+
+            if (isNewTopic)
+            {
+                elementos.forEach(el => {
+                    if (el.tagName === 'P') {
+                        el.setAttribute('data-key', `TopicoNew[${topicoId}].Paragrafo[${paragrafoIndex++}]`);
+                    } else if (el.tagName === 'LI') {
+                        el.setAttribute('data-key', `TopicoNew[${topicoId}].Bullet[${bulletIndex++}]`);
+                    }
+                });
+            }
+            else
+            {
+                elementos.forEach(el => {
+                    if (el.tagName === 'P') {
+                        el.setAttribute('data-key', `Topico[${topicoId}].Paragrafo[${paragrafoIndex++}]`);
+                    } else if (el.tagName === 'LI') {
+                        el.setAttribute('data-key', `Topico[${topicoId}].Bullet[${bulletIndex++}]`);
+                    }
+                });
+            }
+        
+        }
+
+        function adicionarParagrafo(topicoId, isNewTopic) {
+            const elementosContainer = document.querySelector(`#elementos-${topicoId}`);
+            const paragrafoIndex = elementosContainer.querySelectorAll('p[data-editable]').length;
+            let newParagrafoHtml = '';
+
+            if (isNewTopic) {
+                newParagrafoHtml = `
+                    <p data-editable="true" data-type="textarea" data-key="TopicoNew[${topicoId}].Paragrafo[${paragrafoIndex}]" class="sortable-item my-1">
+                        <textarea class="form-control flex-grow-1" rows="2" placeholder="Novo Parágrafo"></textarea>
+                    </p>
+                    `;
+            }
+            else { 
+                newParagrafoHtml = `
+                    <p data-editable="true" data-type="textarea" data-key="Topico[${topicoId}].Paragrafo[${paragrafoIndex}]" class="sortable-item my-1">
+                        <textarea class="form-control flex-grow-1" rows="2" placeholder="Novo Parágrafo"></textarea>
+                    </p>
+                    `;
+            }
+
+            // Insere o novo parágrafo no final do contêiner de elementos
+            elementosContainer.insertAdjacentHTML('beforeend', newParagrafoHtml);
+        }
+
+        function adicionarBulletPoint(topicoId, isNewTopic) {
+            const elementosContainer = document.querySelector(`#elementos-${topicoId}`);
+            const bulletIndex = elementosContainer.querySelectorAll('li[data-editable]').length;
+            let newBulletPointHtml = '';
+
+            if (isNewTopic) { 
+                newBulletPointHtml = `
+                    <li data-editable="true" data-type="textarea" data-key="TopicoNew[${topicoId}].Bullet[${bulletIndex}]" class="sortable-item d-flex align-items-start my-1 gap-2">
+                        <i class="bi bi-check-circle-fill align-self-center"></i>
+                        <textarea class="form-control flex-grow-1" rows="1" placeholder="Novo Bullet Point"></textarea>
+                    </li>
+                `;
+            }
+            else
+            {
+                newBulletPointHtml = `
+                    <li data-editable="true" data-type="textarea" data-key="Topico[${topicoId}].Bullet[${bulletIndex}]" class="sortable-item d-flex align-items-start my-1 gap-2">
+                        <i class="bi bi-check-circle-fill align-self-center"></i>
+                        <textarea class="form-control flex-grow-1" rows="1" placeholder="Novo Bullet Point"></textarea>
+                    </li>
+                `;
+            }
+
+            // Insere o novo bullet point no final do contêiner de elementos
+            elementosContainer.insertAdjacentHTML('beforeend', newBulletPointHtml);
+        }
+
+
+
+        document.getElementById('addTopicButton').addEventListener('click', function () {
+            const topicsContainer = document.getElementById('topicsContainer');
+            const newTopicId = `new_${Date.now()}`;
+
+            const newTopicHtml = `
+                <div class="card mb-4" id="topico-${newTopicId}">
+                    <div class="d-flex topicoCard card-header justify-content-between">
+                            <h4 data-editable="true" data-type="textarea" data-key="TopicoNew[${newTopicId}].Titulo" class="col-6 mb-0">
+                                <textarea class="form-control col-6 mb-0" rows="1" placeholder="Título do Tópico"></textarea>
+                            </h4>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button id="addParagrafoBtn[${newTopicId}]" type="button" class="btn btn-outline-secondary" onclick="adicionarParagrafo('${newTopicId}', true)">
+                                <i class="bi bi-plus-circle"></i> Adicionar Parágrafo
+                            </button>
+                            <button id="addBulletPointBtn[${newTopicId}]" type="button" class="btn btn-outline-secondary" onclick="adicionarBulletPoint('${newTopicId}', true)">
+                                <i class="bi bi-plus-circle"></i> Adicionar Bullet Point
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="removerTopico('${newTopicId}', true)" id="remTopicoBtn[${newTopicId}]">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="elementos-${newTopicId}" class="container list-unstyled">
+                            <p data-editable="true" data-type="textarea" data-key="TopicoNew[${newTopicId}].Paragrafo[0]" class="sortable-item my-1">
+                                <textarea class="form-control" rows="2" placeholder="Novo Parágrafo"></textarea>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            topicsContainer.insertAdjacentHTML('beforeend', newTopicHtml);
+            inicializarSortable(newTopicId);
+        });
+
+        document.getElementById('editButton').addEventListener('click', function () {
+            const isEditing = this.classList.contains('editing');
+            this.innerHTML = isEditing ? '<i class="bi bi-plus-circle"></i> Editar' : '<i class="bi bi-upload"></i> Guardar';
+            this.classList.toggle('editing');
+
+            const editableElements = document.querySelectorAll('[data-editable]');
+            const addTopicButton = document.getElementById('addTopicButton');
+            const addParagrafoButtons = document.querySelectorAll('[id^="addParagrafoBtn"]');
+            const addBulletPointButtons = document.querySelectorAll('[id^="addBulletPointBtn"]');
+            const remTopicoButtons = document.querySelectorAll('[id^="remTopicoBtn"]');
+            const data = {};
+
+            if (isEditing) {
+                // Salvando os dados
+                editableElements.forEach(el => {
+                    const key = el.getAttribute('data-key');
+                    let value;
+
+                    // Verifica se o elemento contém um textarea
+                    if (el.querySelector('textarea')) {
+                        value = el.querySelector('textarea').value.trim();
+                    } else {
+                        value = el.textContent.trim();
+                    }
+
+                    if (key) {
+                        data[key] = value;
+                        console.log(key + " " + data[key]);
+                    }
+                });
+
+                // Enviar dados para o servidor
+                fetch('/Home/GuardarPoliticaPrivacidade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).then(response => {
+                    if (response.ok) {
+                        //alert('Alterações salvas com sucesso!');
+                        window.location.reload();
+                    } else {
+                        //alert('Erro ao salvar alterações.');
+                        window.location.reload();
+                    }
+                });
+                addTopicButton.classList.add('d-none');
+                addParagrafoButtons.forEach(button => button.classList.add('d-none'));
+                addBulletPointButtons.forEach(button => button.classList.add('d-none'));
+                remTopicoButtons.forEach(button => button.classList.add('d-none'));
+            
+            } else {
+                // Entrando no modo de edição
+                editableElements.forEach(el => {
+                    const value = el.textContent.trim();
+                    const key = el.getAttribute('data-key');
+
+                    const isTitulo = /^Topico\[\d+\]\.Titulo/.test(key);
+                    const isParagrafo = /^Topico\[\d+\]\.Paragrafo\[\d+\]/.test(key);
+                    const isBulletPoint = /^Topico\[\d+\]\.Bullet\[\d+\]/.test(key);
+
+                    // Define o número de linhas com base na condição
+                    const rows = isTitulo ? 1 : 2; 
+                    if (isTitulo) placeholder = 'Digite o titulo do tópico';
+                    else if (isParagrafo) placeholder = 'Digite o parágrafo do tópico';
+                    else if (isBulletPoint) placeholder = 'Digite o bullet point do tópico';
+
+                    if (isBulletPoint)
+                        el.innerHTML = `<i class="bi bi-check-circle-fill align-self-center"></i><textarea class="form-control flex-grow-1" rows="${rows}" class="w-auto" placeholder="${placeholder}">${value}</textarea>`;
+                    else
+                        el.innerHTML = `<textarea class="form-control" rows="${rows}" class="w-auto" placeholder="${placeholder}">${value}</textarea>`;
+                });
+                addTopicButton.classList.remove('d-none');
+                addParagrafoButtons.forEach(button => button.classList.remove('d-none'));
+                addBulletPointButtons.forEach(button => button.classList.remove('d-none'));
+                remTopicoButtons.forEach(button => button.classList.remove('d-none'));
+            }
+        });
+    </script>
+
+    <style>
+        .sortable-ghost {
+        opacity: 0.4;
+        background-color: #f0f0f0;
+    }
+
+    [data-editable] {
+        cursor: move;
+    }
+
+    .paragrafos-container p, .bullets-container li {
+        padding: 8px;
+        margin: 4px 0;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .paragrafos-container p:hover, .bullets-container li:hover {
+        border-color: #ddd;
+        background-color: #f8f9fa;
+    }
+
+    </style>
+}
+else
+{
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="display-4 mb-4">Política de Privacidade</h1>
+        </div>
+        <p class="text-right ms-1 text-muted">Última modificação: @Model.dataUltimaModificacao</p>
+
+        @foreach (var topico in Model.topicos)
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>@topico.titulo</h4>
+                </div>
+                <div class="card-body">
+                    @* Divide o conteúdo do tópico usando o delimitador "<p>" *@
+                    @{
+                        var paragrafos = topico.conteudo.Split("<p>", StringSplitOptions.RemoveEmptyEntries)
+                        .Select(p => p.Trim())
+                        .Where(p => !string.IsNullOrWhiteSpace(p))
+                        .ToList();
+
+                        int paragrafoIndex = 0;
+                        int bulletIndex = 0;
+                    }
+
+                    @foreach (var paragrafo in paragrafos)
+                    {
+                        if (paragrafo.Contains("<b>"))
+                        {
+                            var bullets = paragrafo.Split("<b>", StringSplitOptions.RemoveEmptyEntries)
+                            .Select(b => b.Trim())
+                            .Where(b => !string.IsNullOrWhiteSpace(b))
+                            .ToList();
+
+                            <ul class="list-unstyled ml-3">
+                                @foreach (var bullet in bullets)
+                                {
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i> @bullet
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p>@paragrafo</p>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+}

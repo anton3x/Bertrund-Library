@@ -1,0 +1,54 @@
+﻿@model Definitivo.Models.Emprestimo
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Emprestimo</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.DataPrevista)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.DataPrevista)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.DataDevolucao)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.DataDevolucao)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Perfil)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Perfil.Id)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Livro)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Livro.Dimensoes)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.BibliotecarioEntregou)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.BibliotecarioEntregou.Id)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.BibliotecarioRecebeu)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.BibliotecarioRecebeu.Id)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.DataEmprestimo">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

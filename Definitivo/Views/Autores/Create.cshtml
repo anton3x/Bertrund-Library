@@ -1,0 +1,116 @@
+﻿@model Definitivo.Models.Autor
+
+
+@{
+    ViewData["Title"] = "Adicionar Autor";
+}
+
+<div class="container mt-4 mb-4">
+    
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="card px-4 py-4">
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="row g-4">
+                <!-- Nome do Autor -->
+                <div class="col-md-8">
+                    <label asp-for="Nome" class="form-label">Nome do Autor</label>
+                    <input asp-for="Nome" class="form-control" placeholder="Introduza o nome completo do autor" />
+                    <span asp-validation-for="Nome" class="text-danger"></span>
+
+                    <br />
+                    <label asp-for="Biografia" class="form-label">Biografia</label>
+                    <textarea asp-for="Biografia" class="form-control" rows="7" style="resize: none;"
+                              placeholder="Introduza uma breve biografia do autor..." ></textarea>
+                    <span asp-validation-for="Biografia" class="text-danger"></span>
+
+                </div>
+
+                <input hidden asp-for="FotoNome" class="form-control" />
+
+                <!-- Foto do Autor -->
+                <div class="col-md-4">
+                    <label for="FotoUpload" class="form-label text-start">Foto do Autor</label>
+                    <div class="border rounded p-3 text-center" style="min-height: 250px;">
+                        <input type="file" id="FotoUpload" name="FotoUpload" accept="image/*" class="d-none" onchange="previewImage(event)" />
+
+                        <img id="fotoPreview" src="#" alt="Pré-visualização da imagem" class="img-fluid d-none rounded-circle" style="width: 200px; max-height: 200px; max-width: 200px;" />
+                        <label for="FotoUpload" class="btn btn-sm btn-primary rounded-circle" style="width: 32px; height: 32px;">
+                            <i class="bi bi-upload"></i>
+                        </label>
+                        <p class="text-muted mt-2">Formato: JPG, PNG. Tamanho máximo: 10MB</p>
+                        <span asp-validation-for="FotoNome" class="text-danger"></span>
+
+                    </div>
+                    <span class="text-danger"></span>
+                </div>
+
+                <!-- Data de Nascimento -->
+                <div class="col-md-4">
+                    <label asp-for="DataNascimento" class="form-label">Data de Nascimento</label>
+                    <input asp-for="DataNascimento" class="form-control" />
+                    <span asp-validation-for="DataNascimento" class="text-danger"></span>
+                </div>
+
+                <!-- Data de Falecimento -->
+                <div class="col-md-4">
+                    <label asp-for="DataFalecimento" class="form-label">Data de Falecimento</label>
+                    <input asp-for="DataFalecimento" class="form-control" />
+                    <span asp-validation-for="DataFalecimento" class="text-danger"></span>
+                </div>
+
+                <!-- Nacionalidade -->
+                <div class="col-md-4">
+                    <label asp-for="Nacionalidade" class="form-label">Nacionalidade</label>
+                    <input asp-for="Nacionalidade" class="form-control" placeholder="Introduza a nacionalidade do autor" />
+                    <span asp-validation-for="Nacionalidade" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="text-end mt-4">
+                <a asp-action="GerirAutores" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i>                    
+                    Adicionar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('fotoPreview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none'); // Mostra a imagem
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.classList.add('d-none'); // Oculta a imagem caso não tenha arquivo
+        }
+    }
+
+    // Função para carregar a imagem padrão quando a página carregar
+    window.onload = function () {
+        const preview = document.getElementById('fotoPreview');
+        preview.src = "/Images/Users/userDefault.png";
+        preview.classList.remove('d-none');
+    }
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

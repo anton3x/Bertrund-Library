@@ -1,0 +1,65 @@
+﻿@page
+@model LoginWith2faModel
+@{
+    ViewData["Title"] = "Autenticação de dois fatores";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 2.5rem;"></i>
+                        <h2 class="mt-3 mb-3">@ViewData["Title"]</h2>
+                        <p class="text-muted">
+                            O seu acesso está protegido com uma aplicação de autenticação.
+                            Introduza o código de autenticação abaixo.
+                        </p>
+                    </div>
+
+                    <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                        <input asp-for="RememberMe" type="hidden" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="Input.TwoFactorCode"
+                                   class="form-control form-control-lg"
+                                   autocomplete="off"
+                                   placeholder="Código de autenticação" />
+                            <label asp-for="Input.TwoFactorCode">Código de autenticação</label>
+                            <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input asp-for="Input.RememberMachine" class="form-check-input" />
+                            <label asp-for="Input.RememberMachine" class="form-check-label">
+                                Memorizar este dispositivo
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-4">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Iniciar Sessão
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0">
+                            Não tem acesso ao seu dispositivo de autenticação?
+                            <a class="text-decoration-none" id="recovery-code-login"
+                               asp-page="./LoginWithRecoveryCode"
+                               asp-route-returnUrl="@Model.ReturnUrl">
+                                Inicie sessão com um código de recuperação
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

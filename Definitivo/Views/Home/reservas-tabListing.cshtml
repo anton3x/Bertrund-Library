@@ -1,0 +1,198 @@
+﻿@model Definitivo.Models.Perfil
+
+
+<!--Loading -->
+<div id="waitReservas" style="display:none" class="justify-content-center">
+    <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+    <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+</div>
+
+
+<div id="TabelaReservas">
+    @if (ViewData["MessageReservasPerfil"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+            @if (ViewData["MessageReservasPerfil"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast2" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageReservasPerfil"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["MessageReservasPerfil"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast2" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageReservasPerfil"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var successToast = document.getElementById('successToast2');
+            var errorToast = document.getElementById('errorToast2');
+
+            // Exibe o Toast de Sucesso se ele estiver presente
+            if (successToast) {
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            // Exibe o Toast de Erro se ele estiver presente
+            if (errorToast) {
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+            }
+            // Função para exibir os Toasts
+            function showNotificationsReservasPerfil() {
+                var successToast = document.getElementById('successToast2');
+                var errorToast = document.getElementById('errorToast2');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                }
+            }
+
+        </script>
+
+    }
+    @if (Model.Reserva != null && Model.Reserva.Any())
+    {
+        <ul class="list-unstyled">
+            @foreach (var livro in Model.Reserva)
+            {
+                <li class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>@livro.Titulo</h5>
+                            <p class="text-muted">@livro.Autor.Nome</p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#cancelReservationModal-@livro.ID">
+                                <i class="bi bi-arrow-repeat me-2"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- Modal for Canceling Reservation -->
+                <div class="modal fade" id="cancelReservationModal-@livro.ID" tabindex="-1"
+                    aria-labelledby="cancelReservationLabel-@livro.ID" aria-hidden="true"
+                >
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cancelReservationLabel-@livro.ID">
+                                    Cancelar Reserva
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Tem a certeza que deseja cancelar a reserva do livro "@livro.Titulo"?
+                                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">
+                                    <i class="bi bi-arrow-left"></i>
+                                    Voltar
+                                </button>
+                                <form asp-action="CancelarReserva" asp-controller="Livros" method="get"
+                                        data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaReservas"
+                                        data-ajax-loading="#wait" data-ajax-begin="hideBookGridReservas();closeModalReservas();" data-ajax-complete="showBookGridReservas()">
+                                    <input type="hidden" name="cancelaNaViewLivro" value="false" />
+                                    <input type="hidden" name="livroId" value="@livro.ID" />
+                                    <button type="submit" class="btn btn-danger">
+                                        Cancelar
+                                        </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </ul>
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.CurrentPageReservas == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Perfil", new { sectionActivated = "reservas-tab", page = ViewBag.CurrentPageReservas - 1})"
+                        data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaReservas"
+                        data-ajax-loading="#waitReservas" data-ajax-begin="hideBookGridReservas();" data-ajax-complete="showBookGridReservas()">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números das Páginas -->
+                @for (int i = 1; i <= ViewBag.TotalPagesReservas; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPageReservas ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Perfil", new { sectionActivated = "reservas-tab", page = i})"
+                            data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaReservas"
+                            data-ajax-loading="#waitReservas" data-ajax-begin="hideBookGridReservas();" data-ajax-complete="showBookGridReservas()">@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.CurrentPageReservas == ViewBag.TotalPagesReservas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Perfil", new {sectionActivated = "reservas-tab", page = ViewBag.CurrentPageReservas + 1})"
+                        data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaReservas"
+                        data-ajax-loading="#waitReservas" data-ajax-begin="hideBookGridReservas();" data-ajax-complete="showBookGridReservas()">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+    else
+    {
+        <p>Não há reservas ativas no momento.</p>
+    }
+</div>
+
+<script>
+    function hideBookGridReservas() {
+        // Oculta a div que contém a grid de livros
+        document.getElementById('TabelaReservas').style.display = 'none';
+        document.getElementById('waitReservas').classList.add('d-flex'); // Add the d-flex class
+        document.getElementById('waitReservas').style.display = 'block'; // Ensure it's visible
+    }
+
+    function showBookGridReservas() {
+        // Exibe novamente a div que contém a grid de livros
+        document.getElementById('TabelaReservas').style.display = 'block';
+        document.getElementById('waitReservas').classList.remove('d-flex'); // Remove the d-flex class
+        document.getElementById('waitReservas').style.display = 'none'; // Hide the element
+    }
+
+    function closeModalReservas() {
+        const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+        if (modal) {
+            const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+            bootstrapModal.hide(); // Fecha o modal
+        }
+    }
+
+</script>

@@ -1,0 +1,83 @@
+﻿@page
+@model ShowRecoveryCodesModel
+@{
+    ViewData["Title"] = "Códigos de Recuperação";
+    ViewData["ActivePage"] = "TwoFactorAuthentication";
+}
+
+<div class="container mt-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <partial name="_StatusMessage" for="StatusMessage" />
+
+            <div class="text-center mb-4">
+                <i class="bi bi-shield-lock text-primary" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-3">@ViewData["Title"]</h3>
+            </div>
+
+            <div class="alert alert-warning" role="alert">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Guarde estes códigos num local seguro!</strong>
+                </div>
+                <p class="mb-0">
+                    Se perder o seu dispositivo e não tiver os códigos de recuperação,
+                    perderá o acesso à sua conta.
+                </p>
+            </div>
+
+            <div class="recovery-codes-container p-4 rounded border mt-4">
+                <div class="row g-3">
+                    @for (var row = 0; row < Model.RecoveryCodes.Length; row += 2)
+                    {
+                        <div class="col-md-6">
+                            <div class="d-flex gap-3">
+                                <code class="recovery-code flex-grow-1 p-2 rounded border">
+                                    @Model.RecoveryCodes[row]
+                                </code>
+                                @if (row + 1 < Model.RecoveryCodes.Length)
+                                {
+                                    <code class="recovery-code flex-grow-1 p-2 rounded border">
+                                        @Model.RecoveryCodes[row + 1]
+                                    </code>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>
+                    Imprimir Códigos
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .recovery-code {
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 1rem;
+        border-radius: 4px;
+        display: block;
+        text-align: center;
+        letter-spacing: 1px;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        .recovery-codes-container, .recovery-codes-container * {
+            visibility: visible;
+        }
+        .recovery-codes-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    }
+</style>

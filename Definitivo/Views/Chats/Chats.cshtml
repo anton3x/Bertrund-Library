@@ -1,0 +1,761 @@
+﻿@model IEnumerable<Definitivo.Models.ChatsViewModel>
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Chat";
+    var userId = User.Identity.IsAuthenticated ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <!-- Sidebar de Conversas -->
+        <div class="mt-5 col-md-4 p-3 border rounded" style="height: 60vh">
+            <div class="d-flex justify-content-between align-items-center mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <h4 class="mb-0">Mensagens</h4>
+                <i class="btn btn-outline-secondary bi bi-person-plus fs-5" title="Adicionar Utilizadores"></i>
+            </div>
+
+            <!-- Modal para adicionar pessoas -->
+            <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addUserModalLabel">Adicionar Pessoa</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="searchUserForm">
+                                <div class="input-group mb-3">
+                                    <input type="text" id="searchUserInput" class="form-control" placeholder="Procurar por nome..." required />
+                                    <button class="btn btn-primary" type="submit">Procurar</button>
+                                </div>
+                            </form>
+                            <ul id="searchResults" class="list-group"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="waitChatUsers" style="display:none" class="justify-content-center align-items-center">
+                <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+                <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+            </div>
+            <partial name="_ChatUsers" model="Model" />
+
+        </div>
+        <div class="ms-md-3 mt-md-5 mt-3 col-md-7 px-3 py-3 border rounded" style="height: 60vh">
+            <!-- Loading -->
+            <div id="waitChat" style="display:none" class="justify-content-center align-items-center">
+                <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+                <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+            </div>
+            
+            <partial name="_ChatDetails" model="@(ViewData["ChatModel"] ?? new ChatViewModel{})" />
+        </div>
+
+    </div>
+</div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script>
+
+    document.addEventListener("DOMContentLoaded", function() {
+        //console.log("Document loaded");
+        // Verifica se o id do usuário está definido no ViewData
+        var userId = @Html.Raw(ViewData["idUser"] != null ? $"'{ViewData["idUser"]}'" : "null");
+
+        if (userId !== null) {
+            // Chama a função para buscar as informações do usuário
+            getUserInfoFromController(userId, 'false');
+        }
+    });
+
+
+    function updateUnreadMessages(userId)
+    {
+        document.getElementById("contadorMensagensNaoLidas-" + userId).textContent = 0;
+        document.getElementById("contadorMensagensNaoLidas-" + userId).classList.add("d-none");
+    }
+
+    function hideChat() {
+        // Oculta a div que contém a grid de Categorias
+        document.getElementById('chat-container-div').style.display = 'none';
+        document.getElementById('waitChat').classList.add('d-flex'); // Add the d-flex class
+        document.getElementById('waitChat').style.display = 'block'; // Ensure it's visible
+    }
+
+    function showChat() {
+        // Exibe novamente a div que contém a grid de Categorias
+        document.getElementById('chat-container-div').style.display = 'block';
+        document.getElementById('waitChat').classList.remove('d-flex'); // Remove the d-flex class
+        document.getElementById('waitChat').style.display = 'none'; // Hide the element
+
+    }
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chatHub")
+        .withAutomaticReconnect([0, 2000, 5000, 10000]) // Tenta reconectar após 0s, 2s, 5s, 10s
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+        connection.onreconnecting(error => {
+        console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
+        console.log(`A tentar reconectar devido a: ${error}`);
+    });
+
+    connection.onreconnected(connectionId => {
+        console.assert(connection.state === signalR.HubConnectionState.Connected);
+        console.log(`Reconectado com o ID da conexão: ${connectionId}`);
+    });
+
+    connection.onclose(error => {
+        console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+        console.log(`Conexão encerrada devido a: ${error}`);
+    });
+
+    connection.start()
+        .then(() => console.log("Conexão com o hub estabelecida com sucesso."))
+        .catch(err => console.error("Erro ao conectar ao hub:", err.toString()));
+
+    // Configuração do SignalR para receber a notificação de edição de mensagem
+    connection.on("EditMessage", (senderName, messageId, newContent, newTimestamp) => {
+        // Selecionar o conteúdo da mensagem pelo ID
+        //const messageContent = document.querySelector(`#messageContent-${messageId}`);
+        const timestampElement = document.querySelector(`#messageTimeStamp-${messageId}`);
+
+        if (messageContent) {
+            // Atualizar o conteúdo da mensagem
+            //messageContent.textContent = newContent + " (editada)";
+
+            // Atualizar o timestamp
+            if (timestampElement && timestampElement.tagName.toLowerCase() === "small") {
+                timestampElement.textContent = newTimestamp + " (Editada)";
+            }
+        }
+    });
+
+    // Evento para receber a notificação de chamada
+    connection.on("AcceptedCallRequest", (senderUserId, senderUserName) => {
+        console.log(`O user ${senderUserId} ${senderUserName} aceitou a chamada.`);
+
+        var isOnCall = document.getElementById("isOnCall-" + senderUserId);
+        var lastMessage = document.getElementById("lastMessageUser-" + senderUserId);
+
+        if (isOnCall) {
+			isOnCall.classList.remove("d-none");
+            lastMessage.classList.add("d-none");
+		}
+        
+    });
+
+    connection.on("ReceiveCallRequest", (senderUserId, senderUserName) => {
+        console.log(`Recebeu uma chamada de ${senderUserId} ${senderUserName}.`);
+        //console.log("senderUserId: " + senderUserId);
+
+        //se o user ainda nao esta na lista de users
+        if (!document.getElementById("openChat-" + senderUserId)) {
+            getUserInfoFromController(senderUserId, 'false') //adicionar o user na lista dos chats
+        }
+
+        var isOnCall = document.getElementById("isOnCall-" + senderUserId);
+        var lastMessage = document.getElementById("lastMessageUser-" + senderUserId);
+
+        //console.log("isOnCall: " + isOnCall);
+        //console.log("lastMessage: " + lastMessage);
+
+        if (isOnCall) {
+            isOnCall.classList.remove("d-none");
+            isOnCall.classList.add("d-flex");
+            lastMessage.classList.add("d-none");
+        }
+
+        showCallNotification(senderUserId, senderUserName);
+    });
+
+    connection.on("LeftCall", (senderUserId, senderUserName) => {
+        console.log(`Saiu de uma chamada com ${senderUserId} ${senderUserName}.`);
+
+        var isOnCall = document.getElementById("isOnCall-" + senderUserId);
+        var lastMessage = document.getElementById("lastMessageUser-" + senderUserId);
+
+        if (isOnCall) {
+            isOnCall.classList.remove("d-flex");
+            isOnCall.classList.add("d-none");
+            lastMessage.classList.remove("d-none");
+        }
+
+        //showCallNotification(senderUserId, senderUserName);
+    });
+
+    function showCallNotification(senderUserId, senderUserName) {
+        // Criação do contêiner da notificação
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = 'toast show position-fixed top-0 end-0 mt-5 m-3';
+        notificationDiv.style = 'min-width: 350px; z-index: 1050;';
+        notificationDiv.setAttribute('role', 'alert');
+        notificationDiv.setAttribute('aria-live', 'assertive');
+        notificationDiv.setAttribute('aria-atomic', 'true');
+        notificationDiv.id = `toast-${senderUserId}`;
+
+        // Conteúdo da notificação
+        notificationDiv.innerHTML = `
+            <div class="toast-body d-flex align-items-center">
+                <!-- Avatar -->
+                <div class="rounded-circle bg-light d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
+                    <i class="bi bi-person-circle fs-4" style="font-size: 24px; color: #6c757d;"></i>
+                </div>
+                <!-- Informação do Usuário -->
+                <div class="flex-grow-1">
+                        <strong>${senderUserName}</strong>
+                </div>
+                <!-- Botões -->
+                <div class="d-flex gap-2">
+                        <button class="btn btn-danger btn-sm rounded-circle" onclick="rejectCall('${senderUserId}')" >
+                            <i class="bi bi-x fs-6"></i>
+                    </button>
+                        <button class="btn btn-success btn-sm rounded-circle" onclick="acceptCall('${senderUserId}', '${senderUserName}')">
+                            <i class="bi bi-telephone-inbound-fill"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Adiciona a notificação ao corpo do documento
+        document.body.appendChild(notificationDiv);
+
+        // Remove automaticamente após 10 segundos
+        setTimeout(() => {
+            notificationDiv.remove();
+        }, 10000);
+    }
+
+    function acceptCall(senderUserId, senderUserName) {
+        console.log(`Chamada aceite de ${senderUserId}.`);
+        const openChatHyperlink = document.getElementById(`openChat-${senderUserId}`);
+        const chatInitialDiv = document.getElementById("chatArea");
+
+        //console.log(openChatHyperlink);
+        //console.log(chatInitialDiv);
+
+        if (openChatHyperlink) {
+            openChatHyperlink.click();
+            const intervalId = setInterval(() => {
+                const messagesListDiv = document.getElementById("messagesList");
+
+                if (messagesListDiv) {
+                    clearInterval(intervalId); // Para o intervalo
+                    //console.log("messagesList está carregada.");
+
+                    // Agora pode chamar o método para iniciar a chamada
+                    startVideoCall(true);
+                    rejectCall(senderUserId);
+                }
+            }, 100); // Verifica a cada 100ms
+        }
+        else { 
+
+            //faz fetch ao controller para obter as infos sobre o senderUserId, pois nao sei a image e o isOnline
+            getUserInfoFromController(senderUserId);
+
+        }
+    }
+
+    async function getUserInfoFromController(senderUserId, makeCall = 'true', lastMessage = 'Nova Conversa', unreadMessagesCount = 0) {
+        fetch(`/Chats/GetUserInfo?userId=${senderUserId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erro ao obter informações do utilizador.");
+                }
+                return response.json();
+            })
+            .then(userInfo => {
+                const { fotoNome, online, onCall, senderUserName } = userInfo;
+
+                console.log(senderUserName);
+
+                // Adiciona o utilizador à lista de conversas
+                addUserList(senderUserId, senderUserName, fotoNome, online, onCall, lastMessage, unreadMessagesCount);
+
+                if (makeCall == 'true') {
+
+                    const newChatLink = document.getElementById(`openChat-${senderUserId}`);
+                    if (newChatLink) {
+                        newChatLink.click();
+                    }
+                    const intervalId = setInterval(() => {
+                        const messagesListDiv = document.getElementById("messagesList");
+
+                        if (messagesListDiv) {
+                            clearInterval(intervalId); // Para o intervalo
+                            console.log("messagesList está carregada.");
+
+                            // Agora pode chamar o método para iniciar a chamada
+                            startVideoCall(true);
+                            rejectCall(senderUserId);
+                        }
+                    }, 100); // Verifica a cada 100ms
+                }
+            })
+            .catch(error => {
+                console.error("Erro ao buscar informações do utilizador:", error);
+            });
+    }
+
+
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    function getLanguageFromCookie(cookieName) {
+        const cookieValue = getCookie(cookieName); // Obtém o valor bruto do cookie
+        //console.log("cookieValue: " + cookieValue);
+        if (cookieValue) {
+            const parts = cookieValue.split('/'); // Divide o valor em partes por "/"
+            //console.log("parts1: " + parts);
+            return parts[2] || 'pt'; // Retorna a segunda parte (ex.: "pt"), ou "en" como padrão
+        }
+        return 'pt'; // Caso o cookie não exista, retorna "en"
+    }
+
+
+    const userLanguage = getLanguageFromCookie('googtrans') || 'pt';
+
+    function rejectCall(senderUserId) {
+        console.log('Chamada rejeitada.');
+        // Remover notificação
+        const notification = document.getElementById(`toast-${senderUserId}`);
+        if (notification) 
+            notification.remove();
+    }
+
+    connection.on("StartTyping", (senderName) => {
+        const messagesList = document.getElementById("messagesList");
+        const typingIndicator = document.getElementById("typingIndicator");
+
+        // Verifica se typingIndicator existe antes de tentar manipulá-lo
+        if (typingIndicator) {
+            typingIndicator.style.display = "block";
+
+            // Verifica se offsetHeight está disponível e se messagesList também existe
+            const replyAreaHeight = typingIndicator.offsetHeight || 0;
+            if (messagesList) {
+                messagesList.style.height = `calc(100% - 155px - ${replyAreaHeight}px)`;
+            } else {
+                //console.warn("Elemento 'messagesList' não encontrado.");
+            }
+        } else {
+            //console.warn("Elemento 'typingIndicator' não encontrado.");
+        }
+    });
+
+    connection.on("StopTyping", (senderName) => {
+        const messagesList = document.getElementById("messagesList");
+        const typingIndicator = document.getElementById("typingIndicator");
+
+        // Verifica se typingIndicator existe antes de tentar manipulá-lo
+        if (typingIndicator) {
+            typingIndicator.style.display = "none";
+
+            // Verifica se messagesList existe antes de ajustar o estilo
+            if (messagesList) {
+                messagesList.style.height = "calc(100% - 155px)";
+            } else {
+                //console.warn("Elemento 'messagesList' não encontrado.");
+            }
+        } else {
+            //console.warn("Elemento 'typingIndicator' não encontrado.");
+        }
+    });
+
+
+    connection.on("DeleteMessage", (senderId, senderName, messageId, lastMessage, unreadMessages) => {
+        const divMessage = document.getElementById(`message-${messageId}`); // Corrigir a interpolação
+
+        if (divMessage) {
+            divMessage.remove(); // Remover o elemento do DOM
+            //console.log(`Mensagem ${messageId} removida com sucesso.`);
+        }
+
+        //console.log("lastMessage:" + lastMessage);
+        //console.log("unreadMessages:" + unreadMessages);
+
+        const lastMessageElement = document.querySelector("#lastMessageUser-" + senderId);
+        //console.log("lastMessageEl:" + lastMessageElement);
+        if (lastMessageElement) {
+            //console.log(message);
+            if (lastMessage.length > 33) {
+                // Trunca a string para 33 caracteres e adiciona "..."
+                lastMessageElement.textContent = lastMessage.substring(0, 33) + "...";
+            } else {
+                // Se não, exibe a mensagem inteira
+                lastMessageElement.textContent = lastMessage;
+            }
+        }
+
+        const contadorMensagensNaoLidas = document.getElementById("contadorMensagensNaoLidas-" + senderId);
+        //console.log("contadorMensagensNaoLidas:" + contadorMensagensNaoLidas);
+        if (contadorMensagensNaoLidas != null) {
+            // Incrementa o valor atual em 1
+            let currentCount = unreadMessages || 0;
+
+            // Se o valor for diferente de 0, remove a classe 'd-none'
+            if (currentCount != 0) {
+                contadorMensagensNaoLidas.classList.remove("d-none");
+            }
+            else
+            {
+                contadorMensagensNaoLidas.classList.add("d-none");
+            }
+
+            // Atualiza o texto com o novo valor
+            contadorMensagensNaoLidas.textContent = currentCount;
+
+        }
+
+
+    });
+
+    connection.on("AddReaction", (messageId, emoji, userId, reactions) => {
+        const reactionContainer = document.querySelector(`#message-${messageId} .reactions`);
+        if (reactionContainer) {
+            reactionContainer.innerHTML = ''; // Limpa as reações antigas
+
+            for (const [emoji, count] of Object.entries(reactions)) {
+                const reactionSpan = document.createElement('span');
+                reactionSpan.className = 'reaction badge bg-secondary me-1';
+                reactionSpan.textContent = `${emoji} ${count}`;
+                reactionContainer.appendChild(reactionSpan);
+            }
+        }
+    });
+
+
+    connection.on("ReceiveMessage", function (...args) {
+        const messageType = args[args.length - 1]; // A flag é o último argumento
+
+        if (messageType === "statusUpdate") {
+            const [senderId, isOnline] = args;
+            //console.log(senderId + " " + isOnline);
+
+            const userLink = document.querySelector(`a[data-user-id="${senderId}"]`);
+
+            if (userLink != null) {
+                const onlineIndicator = userLink.querySelector("#online-indicator-" + senderId);
+                if (onlineIndicator) {
+                    if (isOnline) {
+                        onlineIndicator.classList.remove("bg-secondary");
+                        onlineIndicator.classList.add("bg-success");
+                    } else {
+                        onlineIndicator.classList.remove("bg-success");
+                        onlineIndicator.classList.add("bg-secondary");
+                    }
+                }
+            }
+        } else if (messageType === "chatMessage") {
+            const [message,messageId, timestamp, senderId, isOnline, isEdited, replyTo, replyToContent, fileNameUploaded] = args;
+            const messagesList = document.getElementById("messagesList");
+            const userLink = document.querySelector(`a[data-user-id="${senderId}"]`);
+            const contadorMensagensNaoLidas = document.getElementById("contadorMensagensNaoLidas-" + senderId); 
+
+            let userCharLoaded = "";
+            let lastMessageNewUser = ""
+
+            if (message.length > 33) {
+                // Trunca a string para 33 caracteres e adiciona "..."
+                lastMessageNewUser = message.substring(0, 33) + "...";
+            } else {
+                // Se não, exibe a mensagem inteira
+                lastMessageNewUser = message;
+            }
+
+
+            //se o user ainda nao esta na lista de users
+            if (!document.getElementById("openChat-" + senderId)) {
+                getUserInfoFromController(senderId, 'false', lastMessageNewUser, unreadMessagesCount = 1)
+            }
+
+            if (document.getElementById("userIdInputChat")) {
+                userCharLoaded = document.getElementById("userIdInputChat").value;
+            }
+
+            if (userCharLoaded != null && userCharLoaded === senderId) {
+                const messageDiv = document.createElement("div");
+                messageDiv.className = senderId === "@userId" ? "mb-2 d-flex justify-content-end pe-2" : "mb-2 d-flex justify-content-start";
+                messageDiv.id = `message-${messageId}`;
+
+                const replyToHtml = replyTo
+                    ? `<div class="reply-to mb-2 p-2 rounded" style="background-color: #e9ecef; color: #6c757d;">
+                    <small>Em resposta a:</small>
+                    <p class="mb-0">${replyToContent}</p>
+               </div>`
+                : "";
+
+                const isImage = fileNameUploaded && /\.(jpg|jpeg|png|gif|bmp)$/i.test(fileNameUploaded);
+
+                const fileLinkHtml = fileNameUploaded
+                    ? `<a href="/Files/uploads/${fileNameUploaded}" target="_blank"
+                            class="d-block text-decoration-none preview-trigger"
+                            style="color: black;"
+                            onmouseover="showImg('imgMsg-${messageId}')"
+                            onmouseout="showImg('imgMsg-${messageId}')">
+                            ${isImage ? '<i class="bi bi-file-earmark-image"></i> Imagem' : '<i class="bi bi-paperclip"></i> Ficheiro'}
+                         </a>
+                            ${isImage ? ` <div class="image-preview position-absolute" id="imgMsg-${messageId}" style="display: none; z-index: 1000; max-width: 100px; border: 1px solid #ccc; border-radius: 5px; background: white;  left: 100px;">
+                                                    <img src="/Files/uploads/${fileNameUploaded}" alt="Preview da Imagem" style="width: 100%; max-width: 100px; height: auto;" />
+                                        </div>` : ''}
+                        `
+                    : '';
+
+                const reactionsHtml = `<div class="reactions d-flex flex-wrap mt-2"></div>`;
+                    
+
+                const messageContent = `
+                    <div class="p-3 rounded position-relative" style="max-width: 60%; min-width: 35%; background-color: ${senderId === "@userId" ? "#007bff" : "#c5c5c5"}; color: ${senderId === "@userId" ? "white" : "black"}; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
+                        ${replyToHtml}
+                        ${fileLinkHtml}
+                            <p id="messageContent-${messageId}" class="mb-1 message-content">${message}</p>
+                            ${reactionsHtml}
+                            <small class="fw-light" style="position: absolute; bottom: 5px; right: 10px;color: dark;">${timestamp}${isEdited ? " (Editada)" : ""}</small>
+                            <div class="d-flex align-items-center mt-2 mb-2">
+                                <div class="reaction-icons d-flex align-items-center position-relative">
+                                    <i class="bi bi-emoji-smile me-2 add-reaction-btn" data-message-id="${messageId}" style="cursor: pointer;"></i> <!-- Ícone de emoji -->
+                                <!-- Menu de reações -->
+                                <div class="reaction-options position-absolute p-2 rounded shadow-sm bg-body border" style="display: none; z-index: 100; width: 200px;">
+                                    <div class="d-grid" style="grid-template-columns: repeat(5, 1fr); gap: 5px; text-align: center;">
+                                        <span class="reaction-option" data-reaction="😀" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">😀</span>
+                                        <span class="reaction-option" data-reaction="😂" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">😂</span>
+                                        <span class="reaction-option" data-reaction="😍" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">😍</span>
+                                        <span class="reaction-option" data-reaction="👍" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">👍</span>
+                                        <span class="reaction-option" data-reaction="👎" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">👎</span>
+                                        <span class="reaction-option" data-reaction="❤️" data-message-id="${messageId}" style="cursor: pointer; font-size:  1rem;">❤️</span>
+                                        <span class="reaction-option" data-reaction="🎉" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">🎉</span>
+                                        <span class="reaction-option" data-reaction="🔥" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">🔥</span>
+                                        <span class="reaction-option" data-reaction="👀" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">👀</span>
+                                        <span class="reaction-option" data-reaction="😮" data-message-id="${messageId}" style="cursor: pointer; font-size: 1rem;">😮</span>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chat-left-text me-2 reply-message-btn" data-message-id="${messageId}" style="cursor: pointer;" data-message-content="${message}"></i>
+                                <i id="saveBtn-${messageId}" class="bi bi-save me-2 save-message-btn" style="cursor: pointer; display: none;" data-message-id="${messageId}"></i>
+                            </div>
+                        </div>
+                `;
+
+                messageDiv.innerHTML = messageContent;
+                messagesList.appendChild(messageDiv);
+                messagesList.scrollTop = messagesList.scrollHeight;
+
+                document.querySelectorAll('.add-reaction-btn').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const options = this.nextElementSibling;
+                        options.style.display = options.style.display === "block" ? "none" : "block";
+                    });
+                });
+
+                document.querySelectorAll('.reaction-option').forEach(option => {
+                    option.addEventListener('click', function () {
+                        const messageId = this.dataset.messageId;
+                        const emoji = this.dataset.reaction;
+                        const reactionContainer = document.querySelector(`#message-${messageId} .reactions`);
+                        const existingReaction = reactionContainer?.querySelector(`.reaction[data-reaction="${emoji}"]`);
+
+                        // Define a URL e o método (adicionar ou remover reação)
+                        const url = '/Chats/UpdateReaction';
+                        const method = 'POST';
+
+                        // Envia a solicitação ao servidor
+                        fetch(url, {
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ messageId, emoji, userId: '@(userId)' }) // Substitua pelo ID do usuário atual
+                        })
+                            .then(response => response.json())
+                            .then(reactions => {
+                                // Atualizar o DOM com as reações atualizadas
+                                if (reactionContainer) {
+                                    reactionContainer.innerHTML = ''; // Limpa as reações antigas
+
+                                    for (const [emoji, count] of Object.entries(reactions)) {
+                                        const reactionSpan = document.createElement('span');
+                                        reactionSpan.className = 'reaction badge bg-secondary me-1';
+                                        reactionSpan.setAttribute('data-reaction', emoji);
+                                        reactionSpan.textContent = `${emoji} ${count}`;
+                                        reactionContainer.appendChild(reactionSpan);
+                                    }
+                                }
+                            })
+                            .catch(error => console.error('Erro ao processar a reação:', error));
+                    });
+                });
+
+                document.querySelectorAll(".reply-message-btn").forEach(button => {
+                    button.addEventListener("click", function () {
+                        const messageId = this.dataset.messageId; // Obter o ID da mensagem
+                        const messageContent = this.dataset.messageContent; // Obter o conteúdo da mensagem
+
+                        // Mostrar a área de resposta
+                        const replyArea = document.getElementById("replyArea");
+                        const replyMessageContent = document.getElementById("replyMessageContent");
+                        const replyToInput = document.getElementById("replyToInput");
+
+                        replyArea.style.display = "block"; // Tornar visível
+                        replyMessageContent.textContent = ` ${messageContent}`; // Inserir o texto da mensagem
+                        replyToInput.value = messageId; // Guardar o ID da mensagem original
+
+                        const replyAreaHeight = replyArea.offsetHeight;
+                        messagesList.style.height = `calc(100% - 155px - ${replyAreaHeight}px)`;
+
+                        // Botão de fechar
+                        const closeButton = replyArea.querySelector(".btn-close");
+                        closeButton.addEventListener("click", function () {
+                            replyArea.style.display = "none"; // Esconder a área de resposta
+                            replyMessageContent.textContent = ""; // Limpar o texto
+                            replyToInput.value = ""; // Limpar o ID
+
+                            messagesList.style.height = "calc(100% - 155px)";
+                        });
+                    });
+                });
+            }
+
+
+            if (userLink != null) {
+                // Encontrar o elemento <small> com id="lastMessageUser" dentro do <a>
+                const lastMessageElement = userLink.querySelector("#lastMessageUser-" + senderId);
+                if (lastMessageElement) {
+                    //console.log(message);
+                    if (message.length > 33) {
+                        // Trunca a string para 33 caracteres e adiciona "..."
+                        lastMessageElement.textContent = message.substring(0, 33) + "...";
+                    } else {
+                        // Se não, exibe a mensagem inteira
+                        lastMessageElement.textContent = message;
+                    }
+                }
+
+                // Atualizar o estado online/offline
+                const onlineIndicator = userLink.querySelector("#online-indicator-" + senderId);
+                if (onlineIndicator) {
+                    if (isOnline) {
+                        onlineIndicator.classList.remove("bg-secondary");
+                        onlineIndicator.classList.add("bg-success");
+                    } else {
+                        onlineIndicator.classList.remove("bg-success");
+                        onlineIndicator.classList.add("bg-secondary");
+                    }
+                }
+            }
+            if (contadorMensagensNaoLidas != null) {
+                // Incrementa o valor atual em 1
+                let currentCount = parseInt(contadorMensagensNaoLidas.textContent, 10) || 0;
+
+                // Se o valor for diferente de 0, remove a classe 'd-none'
+                if (currentCount == 0) {
+                    contadorMensagensNaoLidas.classList.remove("d-none");
+                }
+
+                currentCount += 1;
+
+                // Atualiza o texto com o novo valor
+                contadorMensagensNaoLidas.textContent = currentCount;
+
+            }
+        }
+    });
+
+
+    document.getElementById("searchUserForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const query = document.getElementById("searchUserInput").value;
+        const searchResults = document.getElementById("searchResults");
+
+        fetch(`/Chats/SearchUsers?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(users => {
+                searchResults.innerHTML = "";
+                if (users.length === 0) {
+                    searchResults.innerHTML = "<li class='list-group-item'>Nenhum utilizador encontrado.</li>";
+                } else {
+                    users.forEach(user => {
+                        const li = document.createElement("li");
+                        li.className = "list-group-item d-flex justify-content-between align-items-center";
+                        li.innerHTML = `
+                        <div class="d-flex align-items-center">
+                                <img src="/Images/Users/${user.fotoNome}" alt="Foto de ${user.userName}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            <span>${user.userName}</span>
+                        </div>
+                                <button class="btn btn-sm btn-outline-success" onclick="addUserList('${user.id}', '${user.userName}', '${user.fotoNome}', '${user.isOnline}', '${user.onCall}')">
+                            Conversar
+                        </button>
+                    `;
+                        searchResults.appendChild(li);
+                    });
+                }
+            })
+            .catch(error => console.error("Erro ao procurar utilizadores:", error));
+    });
+
+    function addUserList(userId, userName, userImage, isOnline = 'false', onCall = 'false', lastMessage = "Nova conversa", unreadMessages = 0) {
+        // Adicionar o utilizador à lista de utilizadores se não existir
+   
+        //console.log(isOnline);
+        const listaUtilizadores = document.getElementById("listaUtilizadores");
+
+        // Verifica se o utilizador já existe na lista
+        let userElement = document.querySelector(`#listaUtilizadores [data-user-id="${userId}"]`);
+
+        //console.log(onCall);
+        // Determinar o estado da chamada
+        const onCallIndicator = (onCall == 'true' || onCall == true)
+            ? `<small class="text-info d-flex align-items-center" id="isOnCall-${userId}">
+                        <i class="bi bi-telephone-fill text-info me-1"></i> Em chamada
+                   </small>
+                   <small class="d-none text-muted" id="lastMessageUser-${userId}">
+                        ${lastMessage.length > 33 ? lastMessage.substring(0, 33) + "..." : lastMessage}
+                   </small>`
+            : `<small class="text-info d-none align-items-center" id="isOnCall-${userId}">
+                        <i class="bi bi-telephone-fill text-info me-1"></i> Em chamada
+                   </small>
+                   <small class="text-muted" id="lastMessageUser-${userId}">
+                        ${lastMessage.length > 33 ? lastMessage.substring(0, 33) + "..." : lastMessage}
+                   </small>`;
+
+        if (!userElement) {
+            // Criar o elemento <li>
+            const li = document.createElement("li");
+            li.className = "p-2 border-bottom";
+            li.innerHTML = `
+                    <a href="/Chats/OpenChat?userId=${userId}" class="text-decoration-none d-flex align-items-center"
+                                data-user-id="${userId}"  id="openChat-${userId}" onclick="updateUnreadMessages('${userId}');fetchForCloseCall('${userId}');"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#chat-container-div"
+                       data-ajax-loading="#waitChat" data-ajax-begin="hideChat();" data-ajax-complete="showChat();scrollToBottom();">
+
+                        <div class="me-3 position-relative">
+                            <img src="/Images/Users/${userImage}" class="rounded-circle" width="40" height="40" />
+                                <span id="online-indicator-${userId}" class="position-absolute bottom-0 end-0 translate-middle p-1 ${(isOnline == 'true' || isOnline == true) ? 'bg-success' : 'bg-secondary'} border border-light rounded-circle"
+                                  style="width: 10px; height: 10px;">
+                            </span>
+                        </div>
+
+                            <div class="w-100">
+                                <strong>${userName}</strong>
+                                <br />
+                                ${onCallIndicator}
+                            </div>
+
+                        <div class="end-0">
+                            <span id="contadorMensagensNaoLidas-${userId}" class="badge bg-danger ms-2 ${unreadMessages > 0 ? '' : 'd-none'}">
+                                ${unreadMessages}
+                            </span>
+                        </div>
+                    </a>
+                `;
+
+            listaUtilizadores.appendChild(li);
+        }
+    }
+
+
+</script>

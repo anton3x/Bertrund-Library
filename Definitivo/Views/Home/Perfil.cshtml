@@ -1,0 +1,187 @@
+﻿@model Definitivo.Models.Perfil
+
+@{
+    ViewData["Title"] = "Profile Page";
+}
+
+<div class="d-flex flex-column">
+    <!-- Main Content -->
+    <main class="flex-grow-1 container py-8">
+	    <div class="row mt-5 mb-5 @(User.IsInRole("Leitor") ? "" : "d-flex justify-content-center")">
+			@if (ViewData["MessagePerfil"] != null)
+			{
+				<div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+					@if (ViewData["MessagePerfil"].ToString().StartsWith("Success:"))
+					{
+						<div id="successToastPerfil" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+							<div class="toast-header bg-success text-white">
+								<strong class="me-auto">Sucesso</strong>
+								<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+							</div>
+							<div class="toast-body">
+								@ViewData["MessagePerfil"].ToString().Substring(8) <!-- Remove "Success:" -->
+							</div>
+						</div>
+					}
+					@if (ViewData["MessagePerfil"].ToString().StartsWith("Error:"))
+					{
+						<div id="errorToastPerfil" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+							<div class="toast-header bg-danger text-white">
+								<strong class="me-auto">Erro</strong>
+								<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+							</div>
+							<div class="toast-body">
+								@ViewData["MessagePerfil"].ToString().Substring(6) <!-- Remove "Error:" -->
+							</div>
+						</div>
+					}
+				</div>
+
+				<!-- Código JavaScript para exibir o Toast -->
+				<script>
+						// Função para exibir Toasts
+						function showToastById(toastId) {
+							var toastElement = document.getElementById(toastId);
+							if (toastElement) {
+								var toastInstance = new bootstrap.Toast(toastElement);
+								toastInstance.show();
+							}
+						}
+
+						// Inicialização automática ao carregar a página
+						document.addEventListener('DOMContentLoaded', function () {
+							// Exibe os Toasts automaticamente se existirem
+							showToastById('successToastPerfil');
+							showToastById('errorToastPerfil');
+						});
+
+						// Função reutilizável para notificar dinamicamente
+						function showNotificationsEmprestimosPerfil() {
+							showToastById('successToastPerfil');
+							showToastById('errorToastPerfil');
+						}
+
+					</script>
+
+			}
+		    <!-- Profile and User Info -->
+		    <div class="col-md-4">
+			    <!-- Profile Card -->
+			    <div class="card mb-4">
+				    <div class="card-body text-center">
+					    <div class="position-relative d-inline-block mb-4">
+						    <img src="~/Images/Users/@(string.IsNullOrEmpty(Model.FotoNome) ? "userDefault.png" : Model.FotoNome)"
+						         class="rounded-circle"
+						         alt="@(string.IsNullOrEmpty(Model.FotoNome) ? "Foto padrão" : "Foto de Perfil")"
+						         width="120"
+						         height="120">
+
+						    <form asp-action="UploadProfileImage" asp-controller="Home" method="post" enctype="multipart/form-data" class="position-absolute bottom-0 end-0">
+							    <input type="file" id="profileImage" name="profileImage" accept="image/*" class="d-none" onchange="this.form.submit()">
+							    <label for="profileImage" class="btn btn-sm btn-primary rounded-circle" style="width: 32px; height: 32px;">
+								    <i class="bi bi-upload"></i>
+							    </label>
+						    </form>
+					    </div>
+					    <h2 class="h4">@Model.UserName</h2>
+					    <!--<p class="text-muted">Membro desde ----</p>-->
+					    <a href="/Identity/Account/Manage" class="btn btn-outline-primary">
+						    <i class="bi bi-gear"></i> Editar Perfil
+					    </a>
+				    </div>
+			    </div>
+
+			    <!-- User Information Card -->
+			    <div class="card">
+				    <div class="card-header">
+					    <h4>Informações do Utilizador</h4>
+				    </div>
+				    <div class="card-body">
+					    <ul class="list-unstyled">
+						    <li><strong>Email:</strong> @Model.Email</li>
+						    @if (Model.PhoneNumber != null)
+						    {
+							    <li><strong>Telefone:</strong> @Model.PhoneNumber</li>
+						    }
+						    @if (Model.Morada != null)
+						    {
+							    <li><strong>Morada:</strong> @Model.Morada</li>
+						    }
+					    </ul>
+				    </div>
+			    </div>
+		    </div>
+		    @if (User.IsInRole("Leitor"))
+		    {
+			    <!-- Tabs for Loans, History, and Reservations -->
+			    <div class="col-md-8 mt-4 mt-md-0">
+				    <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+					    <li class="nav-item" role="presentation">
+						    <button class="nav-link @(ViewBag.sectionActivated == "emprestimos-tab" ? "active" : "")"
+						            id="emprestimos-tab"
+						            data-bs-toggle="tab"
+						            data-bs-target="#emprestimos"
+						            type="button"
+						            role="tab">
+							    Empréstimos Atuais
+						    </button>
+					    </li>
+					    <li class="nav-item" role="presentation">
+						    <button class="nav-link @(ViewBag.sectionActivated == "historico-tab" ? "active" : "")" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab">Histórico</button>
+					    </li>
+					    <li class="nav-item" role="presentation">
+						    <button class="nav-link @(ViewBag.sectionActivated == "reservas-tab" ? "active" : "")" id="reservas-tab" data-bs-toggle="tab" data-bs-target="#reservas" type="button" role="tab">Reservas</button>
+					    </li>
+				    </ul>
+
+				    <div class="tab-content mt-2" id="profileTabContent">
+					    <!-- Current Loans Tab -->
+					    <div class="tab-pane fade @(ViewBag.sectionActivated == "emprestimos-tab" ? "show active" : "")" id="emprestimos" role="tabpanel" aria-labelledby="emprestimos-tab">
+						    <div class="card">
+							    <div class="card-header">
+								    <h4>Empréstimos Atuais</h4>
+							    </div>
+							    <div class="card-body">
+								    <partial name="emprestimos-tabListing" model="Model"/>
+							    </div>
+						    </div>
+					    </div>
+
+					    <!-- Loan History Tab -->
+					    <div class="tab-pane fade @(ViewBag.sectionActivated == "historico-tab" ? "show active" : "")" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+						    <div class="card">
+							    <div class="card-header">
+								    <h4>Histórico de Empréstimos</h4>
+							    </div>
+							    <div class="card-body">
+								    <partial name="historico-tabListing" model="Model"/>
+							    </div>
+						    </div>
+					    </div>
+
+					    <div class="tab-pane fade @(ViewBag.sectionActivated == "reservas-tab" ? "show active" : "")" id="reservas" role="tabpanel" aria-labelledby="reservas-tab">
+						    <div class="card">
+							    <div class="card-header">
+								    <h4>Reservas</h4>
+							    </div>
+							    <div class="card-body">
+								    <partial name="reservas-tabListing" model="Model"/>
+							    </div>
+						    </div>
+					    </div>
+
+				    </div>
+			    </div>
+		    }
+	    </div>
+    </main>
+</div>
+
+<script>
+    
+    // Inicializa a função quando o documento for carregado
+    //document.addEventListener('DOMContentLoaded', function () {
+    //    showNotificationsEmprestimosPerfil();
+    //    showNotificationsReservasPerfil();
+    //});
+</script>

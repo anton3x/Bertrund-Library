@@ -1,0 +1,143 @@
+﻿@model IEnumerable<Definitivo.Models.UserRolesViewModel>
+
+@{
+    ViewData["Title"] = "Lista de Utilizadores";
+}
+
+<style>
+    .cardTresD {
+        background-color: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+    }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    .toast {
+        animation: slideIn 0.5s forwards;
+        margin-bottom: 5px; 
+    }
+
+    .toast-container {
+        z-index: 1050; 
+    }
+</style>
+
+<div class="container-fluid">
+    @if (ViewBag.UsersComMuitosEmprestimosCancelados != null && ViewBag.UsersComMuitosEmprestimosCancelados.Count > 0)
+    {
+        <div class="toast-container position-fixed top-1 end-0 p-3">
+            @foreach (var notification in ViewBag.UsersComMuitosEmprestimosCancelados)
+            {
+                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Atenção</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @notification
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <main class="mb-4">
+        <h1 class="h4 mb-4 mt-4">Gerir Utilizadores</h1>
+
+        <form asp-action="GerirUtilizadores" method="get" id="orderSearchGerirUtilizadoresForm"
+              data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#tableGerirUtilizadores"
+              data-ajax-loading="#waitGerirUtilizadores" data-ajax-begin="hideBookGridGerirUtilizadores()" data-ajax-complete="showBookGridGerirUtilizadores();">
+            <div class="row mb-4">
+                <div class="col-12 col-md-6 mb-3 mb-md-0">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Pesquisar usuários..."
+                               aria-label="Pesquisar usuários" name="query" id="userSearchInput" value="@ViewBag.query">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 d-flex justify-content-md-end">
+                    <a class="btn btn-success" asp-action="Create">
+                        <i class="bi bi-plus-lg"></i>
+                        Adicionar Administrador
+                    </a>
+                    <select name="sortOrder" class="form-select w-auto ms-4" onchange="$('#orderSearchGerirUtilizadoresForm').submit();">
+                        <option value="" selected="@(ViewBag.SortOrder == "Nenhum")">Ordenar por ...</option>
+                        <option value="name" selected="@(ViewBag.SortOrder == "name")">Nome ↑</option>
+                        <option value="name_desc" selected="@(ViewBag.SortOrder == "name_desc")">Nome ↓</option>
+                        <option value="cargo" selected="@(ViewBag.SortOrder == "cargo")">Cargo ↑</option>
+                        <option value="cargo_desc" selected="@(ViewBag.SortOrder == "cargo_desc")">Cargo ↓</option>
+                        <option value="estado" selected="@(ViewBag.SortOrder == "estado")">Estado ↑</option>
+                        <option value="estado_desc" selected="@(ViewBag.SortOrder == "estado_desc")">Estado ↓</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <!-- Loading -->
+        <div id="waitGerirUtilizadores" style="display:none" class="justify-content-center">
+            <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+            <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+        </div>
+
+        <partial name="UsersListing" model="Model" />
+
+        <input hidden data-bs-toggle="tooltip" data-bs-html="true" data-bs-title="asdasd" />
+
+    </main>
+</div>
+
+@section Scripts {
+    <script>
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+        $("#userSearchInput").autocomplete({ source: @ViewBag.TagsUsers,
+            minLength: 3
+        });
+
+        // Inicializa a função quando o documento for carregado
+        document.addEventListener('DOMContentLoaded', function () {
+            showNotificationsGerirUsers();
+        });
+
+        function hideBookGridGerirUtilizadores() {
+            // Oculta a div que contém a grid de Categorias
+            document.getElementById('tableGerirUtilizadores').style.display = 'none';
+            document.getElementById('waitGerirUtilizadores').classList.add('d-flex'); // Add the d-flex class
+            document.getElementById('waitGerirUtilizadores').style.display = 'block'; // Ensure it's visible
+        }
+
+        function showBookGridGerirUtilizadores() {
+            // Exibe novamente a div que contém a grid de Categorias
+            document.getElementById('tableGerirUtilizadores').style.display = 'block';
+            document.getElementById('waitGerirUtilizadores').classList.remove('d-flex'); // Remove the d-flex class
+            document.getElementById('waitGerirUtilizadores').style.display = 'none'; // Hide the element
+
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+        }
+
+        function closeModalUtilizadores() {
+            const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+            console.log(modal);
+            if (modal) {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+                bootstrapModal.hide(); // Fecha o modal
+            }
+        }
+
+    </script>
+}

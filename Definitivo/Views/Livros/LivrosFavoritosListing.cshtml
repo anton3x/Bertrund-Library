@@ -1,0 +1,225 @@
+﻿@model IEnumerable<Definitivo.Models.Livro>
+
+
+<div id="TabelaLivrosFavoritos">
+
+    <!--Loading -->
+    <div id="waitFavoritos" style="display:none" class="justify-content-center">
+        <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+        <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+    </div>
+
+    <!-- Book Grid -->
+    <div id="divBookGrid">
+        @if (ViewData["MessageFavoritosPage"] != null)
+        {
+            <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+                @if (ViewData["MessageFavoritosPage"].ToString().StartsWith("Success:"))
+                {
+                    <div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                        <div class="toast-header bg-success text-white">
+                            <strong class="me-auto">Sucesso</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            @ViewData["MessageFavoritosPage"].ToString().Substring(8) <!-- Remove "Success:" -->
+                        </div>
+                    </div>
+                }
+                @if (ViewData["MessageFavoritosPage"].ToString().StartsWith("Error:"))
+                {
+                    <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-danger text-white">
+                            <strong class="me-auto">Erro</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            @ViewData["MessageFavoritosPage"].ToString().Substring(6) <!-- Remove "Error:" -->
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Código JavaScript para exibir o Toast -->
+            <script>
+                var successToast = document.getElementById('successToast');
+                var errorToast = document.getElementById('errorToast');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                        toastSuccess.show(); // Exibe o Toast de sucesso
+                        }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                    }
+                // Função para exibir os Toasts
+                function showNotificationsFavoritosPage() {
+                    var successToast = document.getElementById('successToast');
+                    var errorToast = document.getElementById('errorToast');
+
+                        // Exibe o Toast de Sucesso se ele estiver presente
+                    if (successToast) {
+                        var toastSuccess = new bootstrap.Toast(successToast);
+                        toastSuccess.show(); // Exibe o Toast de sucesso
+                    }
+
+                    // Exibe o Toast de Erro se ele estiver presente
+                    if (errorToast) {
+                            var toastError = new bootstrap.Toast(errorToast);
+                        toastError.show(); // Exibe o Toast de erro
+                    }
+                }
+
+            </script>
+
+        }
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var livro in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-img-wrapper" style="height: 300px;">
+                            <img src="/Images/Livros/@livro.FotoNome"
+                                    alt="Capa de @livro.Titulo"
+                                    class="card-img-top w-100 h-100"
+                                    style="object-fit: cover;" />
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-truncate">@livro.Titulo</h5>
+                            <p class="card-text text-muted text-truncate">@livro.Autor.Nome</p>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <a href="@Url.Action("Book", "Livros", new { id = livro.ID })"
+                                class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-book me-1"></i> Ver Detalhes
+                            </a>
+                            <button class="btn btn-outline-danger btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#removerFavoritosModal-@livro.ID">
+                                <i class="bi bi-trash"></i>
+                                Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remover Favoritos Modal -->
+                <div class="modal fade" id="removerFavoritosModal-@livro.ID" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirmar Remoção</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Tem a certeza que deseja excluir o livro "@livro.Titulo" dos favoritos?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-lg"></i>Cancelar
+                                </button>
+
+                                <form asp-action="RemoverFavorito" asp-controller="Livros"
+                                      asp-route-livroId="@livro.ID" method="get"
+                                      style="display: inline;"
+                                      data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#divBookGrid"
+                                      data-ajax-loading="#waitFavoritos" data-ajax-begin="hideBookGridFavoritos();closeModal();" data-ajax-complete="showBookGridFavoritos()"
+                                >     
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-trash"></i> 
+                                        Excluir
+                                    </button>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+
+
+        @if (Model != null && Model.Any())
+        {
+            <nav class="mt-4 d-flex justify-content-center">
+                <ul class="pagination pagination-md flex-wrap">
+                    <!-- Botão Anterior -->
+                    <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Favoritos", new { page = ViewBag.CurrentPage - 1 })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#divBookGrid"
+                           data-ajax-loading="#waitFavoritos" data-ajax-begin="hideBookGridFavoritos();closeModal();" data-ajax-complete="showBookGridFavoritos()">
+                            Anterior
+                        </a>
+                    </li>
+
+                    <!-- Números das Páginas -->
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Favoritos", new { page = i })"
+                               data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#divBookGrid"
+                           data-ajax-loading="#waitFavoritos" data-ajax-begin="hideBookGridFavoritos();closeModal();" data-ajax-complete="showBookGridFavoritos()">@i</a>
+                        </li>
+                    }
+
+                    <!-- Botão Seguinte -->
+                    <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Favoritos", new { page = ViewBag.CurrentPage + 1 })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#divBookGrid"
+                           data-ajax-loading="#waitFavoritos" data-ajax-begin="hideBookGridFavoritos();closeModal();" data-ajax-complete="showBookGridFavoritos()">
+                            Seguinte
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+
+    </div>
+
+</div>
+
+
+<script>
+    function hideBookGridFavoritos() {
+        // Oculta a div que contém a grid de livros
+        document.getElementById('divBookGrid').style.display = 'none';
+        document.getElementById('waitFavoritos').classList.add('d-flex'); // Add the d-flex class
+        document.getElementById('waitFavoritos').style.display = 'block'; // Ensure it's visible
+    }
+
+    function showBookGridFavoritos() {
+        // Exibe novamente a div que contém a grid de livros
+        document.getElementById('divBookGrid').style.display = 'block';
+        document.getElementById('waitFavoritos').classList.remove('d-flex'); // Remove the d-flex class
+        document.getElementById('waitFavoritos').style.display = 'none'; // Hide the element
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Obtém o valor do tema do atributo data-bs-theme
+        const body = document.body;
+        const theme = body.getAttribute('data-bs-theme');
+        const loadingImage = document.getElementById('loadingImage');
+
+        // Altere a imagem com base no tema
+        //if (theme === 'dark') {
+        //    loadingImage.src = '/Images/loadingGifDarkMode.webp'; // Imagem para o tema escuro
+        //} else {
+        //    loadingImage.src = '/Images/loadingGif1.webp'; // Imagem para o tema claro
+        //}
+    });
+
+    function closeModal() {
+        const modal = document.querySelector('.modal.show'); // Seleciona o modal aberto
+        if (modal) {
+            const bootstrapModal = bootstrap.Modal.getInstance(modal); // Obtém a instância do modal
+            bootstrapModal.hide(); // Fecha o modal
+        }
+    }
+
+</script>

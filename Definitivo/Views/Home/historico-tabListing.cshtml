@@ -1,0 +1,81 @@
+﻿@model Definitivo.Models.Perfil
+
+
+<!--Loading -->
+<div id="waitHistorico" style="display:none" class="justify-content-center">
+    <!--<img src="~/images/loading.webp" alt="Loading Gif" />-->
+    <img id="loadingImage" src="~/images/loadingGif1.webp" alt="Loading Gif" />
+</div>
+
+@if (Model.Emprestimos != null && Model.Emprestimos.Any(e => e.DataDevolucao != null))
+{
+    <div id="TabelaHistorico">
+        <ul class="list-unstyled">
+            @foreach (var emprestimo in Model.Emprestimos.Where(e => e.DataDevolucao != null).OrderByDescending(e => e.DataDevolucao))
+            {
+                <li class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>@emprestimo.Livro.Titulo</h5>
+                            <p class="text-muted">@emprestimo.Livro.Autor.Nome</p>
+                        </div>
+                        <span>Devolvido: @emprestimo.DataDevolucao?.ToShortDateString()</span>
+                    </div>
+                </li>
+            }
+        </ul>
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.CurrentPageHistorico == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Perfil", new { sectionActivated = "historico-tab", page = ViewBag.CurrentPageHistorico - 1})"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaHistorico"
+                       data-ajax-loading="#waitHistorico" data-ajax-begin="hideBookGridHistorico()" data-ajax-complete="showBookGridHistorico()">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números das Páginas -->
+                @for (int i = 1; i <= @ViewBag.TotalPagesHistorico; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPageHistorico ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Perfil", new { sectionActivated = "historico-tab", page = i})"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaHistorico"
+                           data-ajax-loading="#waitHistorico" data-ajax-begin="hideBookGridHistorico()" data-ajax-complete="showBookGridHistorico()">
+                        @i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.CurrentPageHistorico == ViewBag.TotalPagesHistorico ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Perfil", new {sectionActivated = "historico-tab", page = ViewBag.CurrentPageHistorico + 1})"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#TabelaHistorico"
+                       data-ajax-loading="#waitHistorico" data-ajax-begin="hideBookGridHistorico()" data-ajax-complete="showBookGridHistorico()">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+else
+{
+    <p>Não há histórico de empréstimos.</p>
+}
+
+<script>
+
+    function hideBookGridHistorico() {
+        // Oculta a div que contém a grid de livros
+        document.getElementById('TabelaHistorico').style.display = 'none';
+        document.getElementById('waitHistorico').classList.add('d-flex'); // Add the d-flex class
+        document.getElementById('waitHistorico').style.display = 'block'; // Ensure it's visible
+    }
+
+    function showBookGridHistorico() {
+        // Exibe novamente a div que contém a grid de livros
+        document.getElementById('TabelaHistorico').style.display = 'block';
+        document.getElementById('waitHistorico').classList.remove('d-flex'); // Remove the d-flex class
+        document.getElementById('waitHistorico').style.display = 'none'; // Hide the element
+    }
+</script>

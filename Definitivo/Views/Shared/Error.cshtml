@@ -1,0 +1,33 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Erro";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-12 text-center">
+            <h1 class="display-4 text-danger">Ops! Algo correu mal.</h1>
+            <p class="lead">Encontrámos um erro inesperado ao processar o seu pedido.</p>
+
+            @if (Model.ShowRequestId)
+            {
+                <p>
+                    <strong>ID do Pedido:</strong> <code>@Model.RequestId</code>
+                </p>
+            }
+
+            <hr />
+            <p>Se o problema persistir, por favor contacte o suporte.</p>
+
+            <!-- Botões de ação -->
+            <a href="/" class="btn btn-primary">Página Inicial</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Tentar Novamente</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn {
+        margin: 0 5px;
+    }
+</style>

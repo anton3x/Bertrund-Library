@@ -1,0 +1,58 @@
+﻿@page
+@model ResetAuthenticatorModel
+@{
+    ViewData["Title"] = "Repor chave de autenticação";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+<h3 class="mb-3">@ViewData["Title"]</h3>
+
+<div class="alert alert-warning border-warning" role="alert">
+    <div class="d-flex align-items-center mb-3">
+        <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-2"></i>
+        <strong>Atenção: Se repor a sua chave de autenticação, a sua aplicação de autenticação não funcionará até ser reconfigurada.</strong>
+    </div>
+
+    <div class="ms-4">
+        <p class="mb-2">
+            Este processo desativa a autenticação de dois fatores (2FA) até verificar novamente a sua aplicação de autenticação.
+        </p>
+        <p class="mb-0">
+            <strong>Aviso importante:</strong> Se não completar a configuração da sua aplicação de autenticação, poderá perder o acesso à sua conta.
+        </p>
+    </div>
+</div>
+
+<div class="mt-4 d-flex justify-content-end">
+    <form id="reset-authenticator-form" method="post" class="d-inline-block">
+        <button id="reset-authenticator-button" class="btn btn-danger w-auto" style="min-width: 25%" type="submit">
+            <i class="bi bi-key-fill me-2"></i>
+            Repor Chave de Autenticação
+        </button>
+    </form>
+</div>
+
+<style>
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+        padding: 1.25rem;
+    }
+
+    .btn-danger {
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+
+    .bi {
+        vertical-align: middle;
+    }
+</style>

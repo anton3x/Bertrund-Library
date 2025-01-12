@@ -1,0 +1,251 @@
+﻿@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "Registar ou Associar Conta";
+}
+
+<div class="container mt-5 mb-5">
+    <h1 class="text-center mb-2">Registar ou Associar Conta</h1>
+    <p class="text-center text-muted mb-4">Complete o seu perfil ou associe uma conta existente.</p>
+
+    <!-- Nav pills with custom styling -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <ul class="nav nav-pills nav-fill mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#completar">
+                        Completar Perfil
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#associar">
+                        Associar Conta
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Completar Perfil Tab -->
+                <div class="tab-pane fade show active" id="completar">
+                    <div class="card border-0 shadow">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">Completar Perfil</h4>
+                            <p class="text-muted mb-4">Preencha os dados abaixo para completar o seu perfil.</p>
+
+                            <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post" id="registerForm">
+                                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                                <input asp-for="Input.Password" type="password" class="form-control" hidden value="nothing"/>
+                                <div class="mb-3">
+                                    <label class="form-label">UserName</label>
+                                    <input asp-for="Input.UserName" class="form-control" placeholder="Digite o seu username" />
+                                    <span asp-validation-for="Input.UserName" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input asp-for="Input.Email" class="form-control" placeholder="user@gmail.com"/>
+                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Morada</label>
+                                    <input asp-for="Input.Morada" class="form-control" placeholder="Digite a seu morada" />
+                                    <span asp-validation-for="Input.Morada" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Telemóvel</label>
+                                    <input type="tel"
+                                           asp-for="Input.PhoneNumber"
+                                           id="phone"
+                                           class="form-control"
+                                           placeholder="Número de Telemóvel" />
+
+                                    <span id="valid-msg" class="d-none">✓ Valid</span>
+                                    <!--<label for="phoneNumber" class="form-label">Telemóvel</label>-->
+                                    <span class="text-danger d-none" id="error-msg"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Input.SelectedRole">Função</label>
+                                    <select asp-for="Input.SelectedRole" class="form-control">
+                                        <option value="">Selecione uma função</option>
+                                        <option value="Leitor">Leitor</option>
+                                        <option value="Bibliotecario">Bibliotecário</option>
+                                    </select>
+                                    <span asp-validation-for="Input.SelectedRole" class="text-danger"></span>
+                                </div>
+
+                                <button type="submit" class="btn btn-dark w-100 py-2">Completar Perfil</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Associar Conta Tab -->
+                <div class="tab-pane fade" id="associar">
+                    <div class="card border-0 shadow">
+                        <div class="card-body p-4">
+                            <h4 class="mb-4">Associar Conta</h4>
+                            <p class="text-muted mb-4">Associe a sua conta existente ao login externo.</p>
+
+                            <form asp-page-handler="LinkExistingAccount" method="post">
+                                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input asp-for="Input.Email" type="email" class="form-control" placeholder="usuario@gmail.com" />
+                                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label">Password</label>
+                                    <input asp-for="Input.Password" type="password" class="form-control" placeholder="Digite a sua senha" />
+                                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                                </div>
+
+                                <button id="submitButton" type="submit" class="btn btn-dark w-100 py-2">Associar Conta</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Light Mode Nav Pills */
+    .nav-pills .nav-link {
+        color: #666;
+        background: none;
+        border-radius: 0;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+
+        .nav-pills .nav-link:hover {
+            color: #3498db;
+        }
+
+        .nav-pills .nav-link.active {
+            background: none;
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+        }
+    /* Additional styles for better visual feedback */
+    .nav-pills .nav-link {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .nav-pills .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: currentColor;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-pills .nav-link:hover::after {
+            transform: scaleX(1);
+        }
+
+        .nav-pills .nav-link.active::after {
+            display: none;
+        }
+
+
+    .form-control, .form-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #000;
+            box-shadow: none;
+        }
+
+    .btn-dark {
+        background: #3498db;
+        border: none;
+    }
+
+
+    .card {
+        border-radius: 8px;
+    }
+
+    .iti {
+        width: 100%;
+    }
+
+        /* Ajusta o campo de input dentro do intlTelInput */
+        .iti input[type="tel"] {
+            width: 100%;
+            padding-left: 60px; /* Espaço para o código do país */
+            box-sizing: border-box;
+        }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const input = document.querySelector("#phone");
+        const button = document.getElementById("submitButton");
+        const form = document.getElementById("registerForm");
+        const errorMsg = document.querySelector("#error-msg");
+        const validMsg = document.querySelector("#valid-msg");
+
+        // Mapa de mensagens de erro
+        const errorMap = ["Número inválido", "Código de país inválido", "Muito curto", "Muito longo", "Número inválido"];
+
+        // Inicialização do intlTelInput
+        const iti = window.intlTelInput(input, {
+            initialCountry: "pt",
+            preferredCountries: ["pt", "br", "us", "gb"],
+            separateDialCode: true,
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+        });
+
+        // Função para resetar os estados de erro e sucesso
+        const reset = () => {
+            input.classList.remove("is-invalid");
+            input.classList.remove("is-valid");
+            errorMsg.innerText = "";
+            errorMsg.classList.add("d-none");
+            //validMsg.classList.add("d-none");
+        };
+
+        // Função para exibir erros
+        const showError = (msg) => {
+            input.classList.add("is-invalid");
+            errorMsg.innerText = msg;
+            errorMsg.classList.remove("d-none");
+        };
+
+        // Validação no envio do formulário
+        form.addEventListener("submit", function (e) {
+            reset();
+            if (input.value.trim()) {
+                if (iti.isValidNumber()) {
+                    //validMsg.classList.remove("d-none");
+                    console.log("aqui2");
+                    input.value = iti.getNumber(); // Formata o número completo com o código do país
+                } else {
+                    const errorCode = iti.getValidationError();
+                    console.log("aqui3");
+                    const msg = errorMap[errorCode] || "Número inválido";
+                    showError(msg);
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Resetar mensagens ao alterar o valor do campo
+        input.addEventListener("change", reset);
+        input.addEventListener("keyup", reset);
+    </script>
+}

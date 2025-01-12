@@ -1,0 +1,236 @@
+﻿@model Definitivo.Models.Livro
+
+@{
+    ViewData["Title"] = "Adicionar Livro";
+}
+
+<div class="container mt-4 mb-4">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <!-- Inventário e Estado -->
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div class="card mb-0 mb-md-4">
+                            <!-- Informações Básicas -->
+                            <div class="card-body">
+                                <h5 class="card-title">Informações Básicas</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="Titulo" class="form-label">Título</label>
+                                        <input asp-for="Titulo" class="form-control" placeholder="Introduza o título do livro" />
+                                        <span asp-validation-for="Titulo" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="ISBN" class="form-label">ISBN</label>
+                                        <input asp-for="ISBN" class="form-control" placeholder="000-0-00-000000-0" />
+                                        <span asp-validation-for="ISBN" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="BibliotecaId" class="form-label">Biblioteca</label>
+                                        <select asp-for="BibliotecaId" class="form-select" asp-items="ViewBag.BibliotecaId"></select>
+                                        <span asp-validation-for="BibliotecaId" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="CategoriaId" class="form-label">Categoria</label>
+                                        <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId"></select>
+                                        <span asp-validation-for="CategoriaId" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="AutorId" class="form-label">Autor</label>
+                                        <select asp-for="AutorId" class="form-select" asp-items="ViewBag.AutorId"></select>
+                                        <span asp-validation-for="AutorId" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="AnoPublicacao" class="form-label">Ano de Publicação</label>
+                                        <input asp-for="AnoPublicacao" class="form-control" placeholder="AAAA" />
+                                        <span asp-validation-for="AnoPublicacao" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <!-- Foto do Livro -->
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Foto do Livro</h5>
+                                <input hidden asp-for="FotoNome" />
+                                <div class="text-center mb-3">
+                                    <input type="file" id="FotoUpload" name="FotoUpload"
+                                           accept="image/*"
+                                           onchange="previewImage(event)" 
+                                           class="d-none" />
+                                    <img id="fotoPreview"
+                                         src="/Images/Livros/bookDefault.jpeg" 
+                                         alt="Pré-visualização da imagem"
+                                         class="img-fluid rounded-3 d-none"
+                                         style="width: 200px; max-height: 200px; max-width: 200px;" />
+                                    <label for="FotoUpload"
+                                           class="btn btn-sm btn-primary rounded-circle"
+                                           style="width: 32px; height: 32px;">
+                                        <i class="bi bi-upload"></i>
+                                    </label>
+                                    <p class="text-muted mt-2">Formato: JPG, PNG. Tamanho máximo: 10MB</p>
+                                    <span asp-validation-for="FotoNome" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalhes do Livro -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Detalhes do Livro</h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="Dimensoes" class="form-label">Dimensões</label>
+                                <input asp-for="Dimensoes" class="form-control" placeholder="000 x 000 x 000 mm/cm" id="dimensoesInput" />
+                                <span asp-validation-for="Dimensoes" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="NumeroPaginas" class="form-label">Número de Páginas</label>
+                                <input asp-for="NumeroPaginas" class="form-control" placeholder="Introduza o número de páginas do livro"/>
+                                <span asp-validation-for="NumeroPaginas" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="Idioma" class="form-label">Idioma</label>
+                                <input asp-for="Idioma" class="form-control"  placeholder="Introduza o idioma do livro"/>
+                                <span asp-validation-for="Idioma" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Sinopse" class="form-label">Sinopse</label>
+                                <textarea asp-for="Sinopse" class="form-control" rows="4" placeholder="Introduza a sinopse do livro"></textarea>
+                                <span asp-validation-for="Sinopse" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventário e Estado -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Inventário</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="NumeroExemplaresDisponiveis" class="form-label">Exemplares Disponíveis</label>
+                                        <input asp-for="NumeroExemplaresDisponiveis" class="form-control" placeholder="0" />
+                                        <span asp-validation-for="NumeroExemplaresDisponiveis" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label asp-for="NumeroExemplaresTotal" class="form-label">Total de Exemplares</label>
+                                        <input asp-for="NumeroExemplaresTotal" class="form-control" placeholder="0" />
+                                        <span asp-validation-for="NumeroExemplaresTotal" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Estado</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label asp-for="Estado" class="form-label">Estado do Livro</label>
+                                        <select asp-for="Estado" class="form-select">
+                                            <option value="Disponível">Disponível</option>
+                                            <option value="Indisponivel">Indisponível</option>
+                                            <option value="Desativado">Desativado</option>
+                                        </select>
+                                        <span asp-validation-for="Estado" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input asp-for="IdBibliotecarioInseriu" type="hidden" value="1"/>
+                </div>
+
+                <!-- Botões -->
+                <div class="gap-2 text-end">
+                    <a asp-action="GerirLivros" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> 
+                        Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> 
+                        Adicionar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('fotoPreview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none'); // Mostra a imagem
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.classList.add('d-none'); // Oculta a imagem caso não tenha arquivo
+        }
+    }
+
+    // Função para carregar a imagem padrão quando a página carregar
+    window.onload = function () {
+        const preview = document.getElementById('fotoPreview');
+        preview.src = "/Images/Livros/bookDefault.jpeg";
+        preview.classList.remove('d-none');
+    }
+
+    $(document).ready(function() {
+        $('#dimensoesInput').mask('000 x 000 x 000 mm', {
+            translation: {
+                '0': {pattern: /[0-9]/}
+            },
+            placeholder: "___x___x___ mm"
+        });
+
+        // Validação em tempo real
+        $('#dimensoesInput').on('input', function() {
+            var value = $(this).val();
+            var regex = /^\d{1,3}\s*x\s*\d{1,3}\s*x\s*\d{1,3}\s*mm$/;
+
+            if (!regex.test(value)) {
+                $(this).addClass('is-invalid');
+                $(this).removeClass('is-valid');
+            } else {
+                $(this).addClass('is-valid');
+                $(this).removeClass('is-invalid');
+            }
+        });
+    });
+    </script>
+}

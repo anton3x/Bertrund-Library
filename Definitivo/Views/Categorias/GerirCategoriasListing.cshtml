@@ -1,0 +1,271 @@
+﻿@model IEnumerable<Definitivo.Models.Categoria>
+
+
+<!-- Categories Grid -->
+<div id="categoriesTable">
+    @if (ViewData["MessageCategorias"] != null)
+    {
+        <div class="toast-container position-fixed top-0 end-0 py-5 px-3">
+            @if (ViewData["MessageCategorias"].ToString().StartsWith("Success:"))
+            {
+                <div id="successToast" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Sucesso</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageCategorias"].ToString().Substring(8) <!-- Remove "Success:" -->
+                    </div>
+                </div>
+            }
+            @if (ViewData["MessageCategorias"].ToString().StartsWith("Error:"))
+            {
+                <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-danger text-white">
+                        <strong class="me-auto">Erro</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        @ViewData["MessageCategorias"].ToString().Substring(6) <!-- Remove "Error:" -->
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Código JavaScript para exibir o Toast -->
+        <script>
+            var successToast = document.getElementById('successToast');
+            var errorToast = document.getElementById('errorToast');
+
+            // Exibe o Toast de Sucesso se ele estiver presente
+            if (successToast) {
+                var toastSuccess = new bootstrap.Toast(successToast);
+                toastSuccess.show(); // Exibe o Toast de sucesso
+            }
+
+            // Exibe o Toast de Erro se ele estiver presente
+            if (errorToast) {
+                var toastError = new bootstrap.Toast(errorToast);
+                toastError.show(); // Exibe o Toast de erro
+            }
+            // Função para exibir os Toasts
+            function showNotificationsGerirCategorias() {
+                var successToast = document.getElementById('successToast');
+                var errorToast = document.getElementById('errorToast');
+
+                // Exibe o Toast de Sucesso se ele estiver presente
+                if (successToast) {
+                    var toastSuccess = new bootstrap.Toast(successToast);
+                    toastSuccess.show(); // Exibe o Toast de sucesso
+                }
+
+                // Exibe o Toast de Erro se ele estiver presente
+                if (errorToast) {
+                    var toastError = new bootstrap.Toast(errorToast);
+                    toastError.show(); // Exibe o Toast de erro
+                }
+            }
+
+        </script>
+
+    }
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var category in Model)
+        {
+            <!-- Cada categoria precisa ter os atributos data-nome e data-estado -->
+            <div class="col category-row"
+                 data-nome="@category.Nome"
+                 data-estado="@category.Estado">
+
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title mb-0">@category.Nome</h5>
+                            <!-- Estado da categoria -->
+                            <span class="badge @(category.Estado ? "bg-success" : "bg-danger")">
+                                @(category.Estado ? "Ativo" : "Inativo")
+                            </span>
+                        </div>
+                        <!-- Descrição da categoria -->
+                        <p class="card-text" style="min-height: 3rem;">@category.Descricao</p>
+                    </div>
+
+                    <!-- Botões de ação -->
+                    <div class="card-footer bg-transparent border-top-0 mb-2">
+                        <div class="d-flex gap-2 justify-content-between">
+                            <!-- Botão Editar -->
+                            <a class="btn btn-outline-primary flex-grow-1" asp-action="Edit" asp-route-id="@category.Id">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+
+                            <!-- Botão Eliminar -->
+                            <button class="btn btn-outline-danger flex-grow-1"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#eliminarModal-@category.Id">
+                                <i class="bi bi-trash"></i> Excluir
+                            </button>
+
+                            <!-- Botão Ativar/Desativar com modal de confirmação -->
+                            @if (category.Estado)
+                            {
+                                <!-- Modal para desativar a categoria -->
+                                <button class="btn btn-outline-danger flex-grow-1"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#desativarModal-@category.Id">
+                                    <i class="bi bi-power"></i> Desativar
+                                </button>
+                            }
+                            else
+                            {
+                                <!-- Modal para ativar a categoria -->
+                                <button class="btn btn-outline-success flex-grow-1"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#ativarModal-@category.Id">
+                                    <i class="bi bi-power"></i> Ativar
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Desativar Modal -->
+                    <div class="modal fade" id="desativarModal-@category.Id" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmar Desativação</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Tem a certeza que deseja desativar a categoria "@category.Nome"?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-lg"></i> Cancelar
+                                    </button>
+                                    <form asp-controller="Categorias"
+                                          asp-action="DesativarCategoria"
+                                          asp-route-id="@category.Id"
+                                          method="post"
+                                          style="display: inline;"
+                                          data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#categoriesTable"
+                                          data-ajax-loading="#waitGerirCategorias" data-ajax-begin="hideBookGridGerirCategorias();closeModalCategorias();" data-ajax-complete="showBookGridGerirCategorias()">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="orderSelectCopy" value="@ViewBag.orderSelect" />
+                                        <input type="hidden" name="searchBoxCopy" value="@ViewBag.QuerySearched" />
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="bi bi-power"></i> Desativar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ativar Modal -->
+                    <div class="modal fade" id="ativarModal-@category.Id" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmar Ativação</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Tem a certeza que deseja ativar a categoria "@category.Nome"?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-lg"></i> Cancelar
+                                    </button>
+                                    <form asp-controller="Categorias"
+                                          asp-action="AtivarCategoria"
+                                          asp-route-id="@category.Id"
+                                          method="post"
+                                          style="display: inline;"
+                                          data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#categoriesTable"
+                                          data-ajax-loading="#waitGerirCategorias" data-ajax-begin="hideBookGridGerirCategorias();closeModalCategorias();" data-ajax-complete="showBookGridGerirCategorias()">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="orderSelectCopy" value="@ViewBag.orderSelect" />
+                                        <input type="hidden" name="searchBoxCopy" value="@ViewBag.QuerySearched" />
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-power"></i> Ativar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Eliminar Modal -->
+                    <div class="modal fade" id="eliminarModal-@category.Id" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Tem a certeza que deseja excluir a categoria "@category.Nome"?</p>
+                                    <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-lg"></i> Cancelar
+                                    </button>
+                                    <form asp-action="Delete" asp-controller="Categorias"
+                                          asp-route-id="@category.Id" method="post" 
+                                          style="display: inline;"
+                                          data-ajax="true" data-ajax-method="post" data-ajax-mode="replace" data-ajax-update="#categoriesTable"
+                                          data-ajax-loading="#waitGerirCategorias" data-ajax-begin="hideBookGridGerirCategorias();closeModalCategorias();" data-ajax-complete="showBookGridGerirCategorias()">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="orderSelectCopy" value="@ViewBag.orderSelect" />
+                                        <input type="hidden" name="searchBoxCopy" value="@ViewBag.QuerySearched" />
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        }
+    </div>
+    @if (Model != null && Model.Any())
+    {
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-md flex-wrap">
+                <!-- Botão Anterior -->
+                <li class="page-item @(ViewBag.PaginaAtual == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirCategorias", new { searchBox = ViewBag.QuerySearched, paginaAtual = ViewBag.PaginaAtual - 1, orderSelect = ViewBag.orderSelect })" tabindex="@(ViewBag.PaginaAtual == 1 ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#categoriesTable"
+                       data-ajax-loading="#waitGerirCategorias" data-ajax-begin="hideBookGridGerirCategorias()" data-ajax-complete="showBookGridGerirCategorias()">
+                        Anterior
+                    </a>
+                </li>
+
+                <!-- Números das Páginas -->
+                @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("GerirCategorias", new { searchBox = ViewBag.QuerySearched, paginaAtual = i, orderSelect = ViewBag.orderSelect })"
+                           data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#categoriesTable"
+                           data-ajax-loading="#waitGerirCategorias" data-ajax-begin="hideBookGridGerirCategorias()" data-ajax-complete="showBookGridGerirCategorias()">@i</a>
+                    </li>
+                }
+
+                <!-- Botão Seguinte -->
+                <li class="page-item @(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("GerirCategorias", new { searchBox = ViewBag.QuerySearched, paginaAtual = ViewBag.PaginaAtual + 1, orderSelect = ViewBag.orderSelect })" tabindex="@(ViewBag.PaginaAtual == ViewBag.TotalPaginas ? "-1" : "0")"
+                       data-ajax="true" data-ajax-method="get" data-ajax-mode="replace" data-ajax-update="#categoriesTable"
+                       data-ajax-loading="#waitGerirCategorias" data-ajax-begin="hideBookGridGerirCategorias()" data-ajax-complete="showBookGridGerirCategorias()">
+                        Seguinte
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+
+</div>

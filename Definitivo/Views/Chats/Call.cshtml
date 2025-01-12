@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Entrar na Sala Daily.co";
+    var roomUrl = ViewData["RoomUrl"] as string;
+}
+
+<h1>Bem-vindo à Sala de Videochamada</h1>
+<div id="videoContainer"></div>
+<button id="leaveCall" style="margin-top: 20px;">Sair da Chamada</button>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const roomUrl = "@roomUrl";
+        const videoContainer = document.getElementById('videoContainer');
+
+        // Inicializa a chamada
+        const callFrame = DailyIframe.createFrame({
+            showLeaveButton: true,
+            iframeStyle: {
+                display: "block" // Usaremos nosso próprio layout
+            }
+        });
+
+        // Junta-se à sala
+        callFrame.join({ url: roomUrl })
+            .then(() => {
+                console.log("Entrou na chamada!");
+                setupCustomVideo(callFrame);
+            })
+            .catch(err => console.error("Erro ao entrar na chamada:", err));
+
+        // Configura o vídeo customizado
+        function setupCustomVideo(frame) {
+            frame.on('participant-joined', event => {
+                const video = document.createElement('video');
+                video.autoplay = true;
+                video.muted = true; // Mute local participant video by default
+                videoContainer.appendChild(video);
+
+                frame.participants().local.videoTrack.attach(video);
+            });
+
+            frame.on('participant-updated', event => {
+                console.log(event);
+            });
+
+            frame.on('participant-left', event => {
+                const video = document.querySelector(`[data-user-id="${event.participant.user_id}"]`);
+                if (video) video.remove();
+            });
+        }
+
+        // Sair da chamada
+        document.getElementById('leaveCall').addEventListener('click', () => {
+            callFrame.leave();
+            alert('Você saiu da chamada.');
+        });
+    });
+</script>
+<style>
+    #videoContainer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        width: 90%;
+        max-width: 1200px;
+        margin: auto;
+        background: white;
+        border: 2px solid #ccc;
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    video {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        width: 300px;
+        height: 200px;
+    }
+
+    #controls {
+        margin-top: 20px;
+    }
+
+    button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+</style>

@@ -1,0 +1,83 @@
+﻿@{
+    ViewData["Title"] = "Author Page";
+}
+
+<div class="container my-4">
+    <!-- Author Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <img src="~/Images/autor.png" class="img-fluid rounded-lg shadow-lg mb-4" alt="Author portrait" />
+            <div class="card">
+                <div class="card-header">
+                    <h4>Atributos do Autor</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Nascimento:</strong> 24 de setembro de 1896</li>
+                        <li><strong>Falecimento:</strong> 21 de dezembro de 1940</li>
+                        <li><strong>Nacionalidade:</strong> Americana</li>
+                        <li><strong>Gêneros:</strong> Ficção, Romance</li>
+                        <li><strong>Período Literário:</strong> Era do Jazz</li>
+                        <li><strong>Obras Notáveis:</strong> O Grande Gatsby, Suave É a Noite</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h2 class="display-4">F. Scott Fitzgerald</h2>
+            <div class="mb-4">
+                <span class="badge bg-primary">Autor Clássico</span>
+                <span class="badge bg-secondary">Modernismo</span>
+                <span class="badge bg-secondary">Literatura Americana</span>
+            </div>
+
+            <!-- Bootstrap Tabs -->
+            <ul class="nav nav-tabs" id="authorTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="biografia-tab" data-bs-toggle="tab" data-bs-target="#biografia" type="button" role="tab">Biografia</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="obras-tab" data-bs-toggle="tab" data-bs-target="#obras" type="button" role="tab">Obras</button>
+                </li>
+            </ul>
+
+            <!-- Tabs Content -->
+            <div class="tab-content mt-3" id="authorTabContent">
+                <!-- Biografia Tab -->
+                <div class="tab-pane fade show active" id="biografia" role="tabpanel">
+                    <p class="text-muted">
+                        Francis Scott Key Fitzgerald foi um dos maiores escritores americanos do século XX. Nascido em 1896 em St. Paul, Minnesota, Fitzgerald frequentou a Universidade de Princeton antes de se alistar no exército durante a Primeira Guerra Mundial. Sua carreira literária decolou com a publicação de "Este Lado do Paraíso" em 1920.
+                    </p>
+                    <p class="text-muted">
+                        Fitzgerald é mais conhecido por seu romance "O Grande Gatsby" (1925), que é amplamente considerado como "O Grande Romance Americano". Sua obra capturou o espírito da Era do Jazz e explorou temas de ambição, decadência e o Sonho Americano.
+                    </p>
+                    <p class="text-muted">
+                        Apesar de seu talento, Fitzgerald enfrentou dificuldades financeiras e pessoais ao longo de sua vida. Ele morreu em 1940, aos 44 anos, deixando inacabado seu último romance, "O Último Magnata".
+                    </p>
+                </div>
+
+                <!-- Obras Tab -->
+                <div class="tab-pane fade" id="obras" role="tabpanel">
+                    <div class="row g-4">
+                        @foreach (var book in new[] { "O Grande Gatsby", "Suave É a Noite", "Este Lado do Paraíso", "Belos e Malditos", "O Último Magnata", "Contos da Era do Jazz" })
+                        {
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body d-flex align-items-center">
+                                        <img src="https://img.wook.pt/images/o-investidor-inteligente-benjamin-graham/MXwyOTkxNjE0N3wyNjM3NDkzNHwxNzEyOTEyOTM3MDAwfHdlYnA=/250x" class="img-fluid me-3" style="width: 60px; height: 90px;" alt="Book cover" />
+                                        <div>
+                                            <h5 class="card-title">@book</h5>
+                                            <p class="card-text text-muted">1920 • Romance</p>
+                                            <a href="#" class="btn btn-link p-0">Ver detalhes</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
